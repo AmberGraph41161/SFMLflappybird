@@ -1,0 +1,105 @@
+#include <cstdlib>
+#include <iostream>
+#include <chrono>
+#include <SFML/Graphics.hpp>
+#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Window/Keyboard.hpp>
+#include <SFML/Window/VideoMode.hpp>
+
+class Pipe
+{
+public:
+	Pipe(sf::Texture* pipeTexture, double pipeSpeed)
+		: texture(pipeTexture), speed(pipeSpeed)
+	{
+
+	}
+
+	void move()
+	{
+		x -= speed;
+	}
+
+private:
+	sf::Texture* texture;
+	double x, y;
+	double spacing = 0;
+	double speed = 1;
+};
+
+int main()
+{
+	std::cout << "[doing setup crap]" << std::endl;
+
+	//load player stuff
+	sf::Sprite player;
+	sf::Texture playerTexture;
+	if(!playerTexture.loadFromFile("resources/flappybird.png"))
+	{
+		std::cerr << "failed to load \"resources/flappybird.png\"" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	player.setTexture(playerTexture);
+
+	double playerX = 0;
+	double playerY = 0;
+	double playerXvelocity = 0;
+	double playerYvelocity = 0;
+	double gravity = 10;
+	double playerYfriction = 0.9;
+
+
+	std::chrono::time_point<std::chrono::system_clock> lastlastframe = std::chrono::high_resolution_clock::now();
+	std::chrono::time_point<std::chrono::system_clock> lastframe = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double> deltaTime = lastframe - lastlastframe;
+
+	sf::RenderWindow window(sf::VideoMode(1080, 720), "title goes here", sf::Style::Default);
+	while(window.isOpen())
+	{
+		sf::Event event;
+		while(window.pollEvent(event))
+		{
+			if(event.type == sf::Event::Closed)
+			{
+				window.close();
+			}
+		}
+		if(sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
+		{
+			window.close();
+		}
+
+		//controls
+		if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+		{
+			playerYvelocity = -100;
+		} else
+		{
+			//move player
+			playerYvelocity += gravity * deltaTime.count();
+		}
+
+		playerY += playerYvelocity;
+		playerX += playerXvelocity;
+
+		player.setPosition(playerX, playerY);
+		playerYvelocity *= playerYfriction;
+
+		//draw and deltaTime
+		lastlastframe = std::chrono::high_resolution_clock::now();
+		window.clear(sf::Color::Black);
+		window.draw(player);
+		window.display();
+		lastframe = std::chrono::high_resolution_clock::now();
+		deltaTime = lastframe - lastlastframe;
+
+		std::cout << "playerX" << playerX << std::endl;
+		std::cout << "playerY" << playerY << std::endl;
+		std::cout << "playerXvelocity" << playerXvelocity << std::endl;
+		std::cout << "playerYvelocity" << playerYvelocity << std::endl;
+	}
+
+
+	std::cout << "[done!]" << std::endl;
+	return 0;
+}
