@@ -120,9 +120,9 @@ int main()
 		exit(EXIT_FAILURE);
 	}
 	backgroundTexture.setRepeated(true);
-	background.setTextureRect(sf::Rect<int>(backgroundTexture.getSize().x * 3, backgroundTexture.getSize().y));
+	background.setTextureRect(sf::IntRect(0, 0, backgroundTexture.getSize().x * 7, backgroundTexture.getSize().y));
 	background.setTexture(backgroundTexture);
-	background.setScale(sf::Vector2f(9, 9));
+	background.setScale(sf::Vector2f(7.5, 7.5));
 	background.setOrigin(background.getLocalBounds().width / 2, background.getLocalBounds().height / 2);
 	background.setPosition(static_cast<double>(screenWidth) / 2, static_cast<double>(screenHeight) / 2);
 
