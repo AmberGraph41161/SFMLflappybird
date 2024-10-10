@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <ctime>
 #include <iostream>
 #include <chrono>
 #include <SFML/Graphics.hpp>
@@ -17,6 +18,21 @@ int RANDOM(int minimum, int maximum)
 double RANDOMDOUBLE(double minimum, double maximum)
 {
 	return (((double)rand() / RAND_MAX) * (maximum - minimum)) + minimum;
+}
+
+void SLEEP(double seconds)
+{
+	std::chrono::time_point<std::chrono::system_clock> START, END;
+	START = std::chrono::high_resolution_clock::now();
+	while(true)
+	{
+		END = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double> duration = END - START;
+		if(duration.count() >= seconds)
+		{
+			break;
+		}
+	}
 }
 
 class Pipe
@@ -70,6 +86,16 @@ public:
 		}
 
 		if(y >= height || y <= top)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	bool intersects(sf::FloatRect object)
+	{
+		if(topPipe.getGlobalBounds().intersects(object) || bottomPipe.getGlobalBounds().intersects(object))
 		{
 			return true;
 		}
@@ -136,11 +162,9 @@ int main()
 	}
 	std::vector<Pipe> pipes;
 	double defaultPipeSpacing = 100;
-	double defaultPipeSpeed = 0.5;
+	double defaultPipeSpeed = 0.2;
 
-	pipes.push_back(Pipe(&pipeTexture, screenWidth - 100, screenHeight / 2, defaultPipeSpacing, defaultPipeSpeed));
-
-
+	pipes.emplace_back(Pipe(&pipeTexture, screenWidth - 100, screenHeight / 2, defaultPipeSpacing, defaultPipeSpeed));
 
 	//load background and flooring stuff
 	sf::Sprite background;
@@ -183,9 +207,13 @@ int main()
 	std::chrono::time_point<std::chrono::system_clock> lastlastframe = std::chrono::high_resolution_clock::now();
 	std::chrono::time_point<std::chrono::system_clock> lastframe = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> deltaTime = lastframe - lastlastframe;
+	
+	sf::View view(sf::FloatRect(0, 0, screenWidth, screenHeight));
 
 	sf::RenderWindow window(sf::VideoMode(screenWidth, screenHeight), "title goes here", sf::Style::Default);
-	window.setKeyRepeatEnabled(false);
+	window.setView(view);
+	window.setKeyRepeatEnabled(false); //reread documentation for this one buddy Thursday, October 10, 2024, 10:34:00
+
 	while(window.isOpen())
 	{
 		sf::Event event;
@@ -194,6 +222,15 @@ int main()
 			if(event.type == sf::Event::Closed)
 			{
 				window.close();
+			}
+			if(event.type == sf::Event::Resized)
+			{
+				std::cout << "event.size.width " << event.size.width << std::endl;
+				std::cout << "event.size.height " << event.size.height << std::endl;
+
+				std::cout << "window.getSize().x" << window.getSize().x << std::endl;
+				std::cout << "window.getSize().y" << window.getSize().y << std::endl;
+
 			}
 		}
 		if(sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
@@ -204,26 +241,31 @@ int main()
 		//debug controls
 		if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
 		{
-			background.move(0, -1);
+			//background.move(0, -1);
 		} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
 		{
-			background.move(0, 1);
+			//background.move(0, 1);
 		} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
 		{
-			background.move(-1, 0);
+			//background.move(-1, 0);
 		} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
 		{
-			background.move(1, 0);
+			std::cout << (((float)window.getSize().x * 16) / 9) << std::endl;
+			std::cout << (((float)window.getSize().y * 9) / 16) << std::endl;
+			view.setViewport(sf::FloatRect(0, 0, 1, 0.2));
+			window.setView(view);
+
+			//background.move(1, 0);
 		} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::R))
 		{
-			background.rotate(5);
+			//background.rotate(5);
 		} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
 		{
 			while(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
 			{
 
 			}
-			pipes.push_back(Pipe(&pipeTexture, screenWidth - 100, RANDOMDOUBLE(300, screenHeight - 300), defaultPipeSpacing, defaultPipeSpeed));
+			pipes.emplace_back(Pipe(&pipeTexture, screenWidth - 100, RANDOMDOUBLE(300, screenHeight - 300), defaultPipeSpacing, defaultPipeSpeed));
 		}
 
 		//controls
@@ -268,9 +310,21 @@ int main()
 		window.draw(player);
 		for(int x = 0; x < pipes.size(); x++)
 		{
+			if(pipes[x].intersects(player.getGlobalBounds()))
+			{
+				playerIsAlive = false;
+			}
+
+			pipes[x].move();
+			if(pipes[x].isOffScreen(0, view.getSize().x, 0, screenHeight))
+			{
+				pipes.erase(pipes.begin() + x);
+				x--;
+				continue;
+			}
+
 			window.draw(pipes[x].getTopPipe());
 			window.draw(pipes[x].getBottomPipe());
-			pipes[x].move();
 		}
 
 		window.draw(startButton);
@@ -279,11 +333,22 @@ int main()
 		lastframe = std::chrono::high_resolution_clock::now();
 		deltaTime = lastframe - lastlastframe;
 
+		if(playerIsAlive)
+		{
+			std::cout << "ALIVE" << std::endl;
+		} else
+		{
+			std::cout << "DEAD" << std::endl;
+		}
+
+		//SLEEP(0.001);
+		/*
 		std::cout << "playerX" << playerX << std::endl;
 		std::cout << "playerY" << playerY << std::endl;
 		std::cout << "playerXvelocity" << playerXvelocity << std::endl;
 		std::cout << "playerYvelocity" << playerYvelocity << std::endl;
 		std::cout << "playerAngle" << playerAngle << std::endl;
+		*/
 	}
 
 
