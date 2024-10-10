@@ -1,6 +1,3 @@
-#include <SFML/Graphics/Rect.hpp>
-#include <SFML/Graphics/RectangleShape.hpp>
-#include <SFML/System/Vector2.hpp>
 #include <cstdlib>
 #include <iostream>
 #include <chrono>
@@ -8,20 +5,33 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Keyboard.hpp>
 #include <SFML/Window/VideoMode.hpp>
+#include <SFML/Graphics/Rect.hpp>
+#include <SFML/Graphics/RectangleShape.hpp>
+#include <SFML/System/Vector2.hpp>
+
+int RANDOM(int minimum, int maximum)
+{
+	return (rand() % maximum - minimum + 1) + minimum;
+}
+
+double RANDOMDOUBLE(double minimum, double maximum)
+{
+	return (((double)rand() / RAND_MAX) * (maximum - minimum)) + minimum;
+}
 
 class Pipe
 {
 public:
-	Pipe(sf::Texture* pipeTexture, double pipeSpeed)
-		: texture(pipeTexture), speed(pipeSpeed)
+	Pipe(sf::Texture* pipeTexture, double startX, double startY, double pipeSpacing, double pipeSpeed)
+		: texture(pipeTexture), x(startX), y(startY), spacing(pipeSpacing), speed(pipeSpeed)
 	{
 		topPipe.setTexture(*texture);
 		bottomPipe.setTexture(*texture);
 
 		topPipe.rotate(180);
 
-		topPipe.setPosition(x, y + spacing);
-		bottomPipe.setPosition(x, y - spacing);
+		topPipe.setPosition(x, y - spacing);
+		bottomPipe.setPosition(x, y + spacing);
 
 		std::cout << "pipe created!" << std::endl;
 	}
@@ -33,21 +43,28 @@ public:
 	void move()
 	{
 		x -= speed;
+
+		topPipe.setPosition(x, y - spacing);
+		bottomPipe.setPosition(x, y + spacing);
 	}
 
-	void setPosition()
+	void setPosition(double X, double Y)
 	{
+		x = X;
+		y = Y;
 
+		topPipe.setPosition(x, y - spacing);
+		bottomPipe.setPosition(x, y + spacing);
 	}
 
-	bool isOffScreen(double left, double right, double top, double bottom)
+	bool isOffScreen(double left, double width, double top, double height)
 	{
-		if(x <= left || x >= right)
+		if(x <= left || x >= width)
 		{
 			return true;
 		}
 
-		if(y <= bottom || y >= top)
+		if(y >= height || y <= top)
 		{
 			return true;
 		}
@@ -78,8 +95,8 @@ int main()
 {
 	std::cout << "[doing setup crap]" << std::endl;
 
-	const int screenWidth = 1080;
-	const int screenHeight = 720;
+	const double screenWidth = 1080;
+	const double screenHeight = 720;
 
 	//load player stuff
 	sf::Sprite player;
@@ -111,6 +128,13 @@ int main()
 		std::cerr << "failed to load \"resources/longpipe.png\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	std::vector<Pipe> pipes;
+	double defaultPipeSpacing = 100;
+	double defaultPipeSpeed = 0.5;
+
+	pipes.push_back(Pipe(&pipeTexture, screenWidth - 100, screenHeight / 2, defaultPipeSpacing, defaultPipeSpeed));
+
+
 
 	//load background and flooring stuff
 	sf::Sprite background;
@@ -126,7 +150,6 @@ int main()
 	background.setScale(sf::Vector2f(7.5, 7.5));
 	background.setOrigin(background.getLocalBounds().width / 2, background.getLocalBounds().height / 2);
 	background.setPosition(static_cast<double>(screenWidth) / 2, static_cast<double>(screenHeight) / 2);
-
 
 	//ceiling
 	sf::RectangleShape ceiling(sf::Vector2f(screenWidth, screenHeight * 0.1));
