@@ -29,6 +29,11 @@ public:
 		bottomPipe.setTexture(*texture);
 
 		topPipe.rotate(180);
+		topPipe.setOrigin(topPipe.getLocalBounds().width / 2, topPipe.getLocalBounds().top);
+		bottomPipe.setOrigin(bottomPipe.getLocalBounds().width / 2, bottomPipe.getLocalBounds().top);
+
+		topPipe.setScale(sf::Vector2f(defaultPipeScale, defaultPipeScale));
+		bottomPipe.setScale(sf::Vector2f(defaultPipeScale, defaultPipeScale));
 
 		topPipe.setPosition(x, y - spacing);
 		bottomPipe.setPosition(x, y + spacing);
@@ -89,6 +94,7 @@ private:
 	double x, y;
 	double spacing = 0;
 	double speed = 1;
+	double defaultPipeScale = 5;
 };
 
 int main()
