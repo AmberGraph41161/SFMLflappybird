@@ -102,6 +102,7 @@ int main()
 	double playerAngle = 0;
 	double playerAngleMultiplier = 100;
 	bool playerJumpedLastTime = false;
+	bool playerIsAlive = true;
 
 	//load pipe stuff
 	sf::Texture pipeTexture;
@@ -136,8 +137,19 @@ int main()
 	floor.setPosition(0, screenHeight - floor.getLocalBounds().height);
 	floor.setFillColor(sf::Color::Cyan);
 	
-	std::vector<Pipe> pipes;
-	pipes.push_back(Pipe(&pipeTexture, 1));
+	//start menu
+	sf::Sprite startButton;
+	sf::Texture startButtonTexture;
+	if(!startButtonTexture.loadFromFile("resources/startbutton-Sheet.png"))
+	{
+		std::cerr << "failed to load \"resources/startbutton-Sheet.png\"" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	startButton.setTexture(startButtonTexture);
+	startButton.setTextureRect(sf::IntRect(0, 0, 33, 13));
+	startButton.setScale(sf::Vector2f(10, 10));
+	startButton.setOrigin(startButton.getLocalBounds().width / 2, startButton.getLocalBounds().height / 2);
+	startButton.setPosition(screenWidth / 2, screenHeight / 2);
 
 	std::chrono::time_point<std::chrono::system_clock> lastlastframe = std::chrono::high_resolution_clock::now();
 	std::chrono::time_point<std::chrono::system_clock> lastframe = std::chrono::high_resolution_clock::now();
@@ -176,6 +188,13 @@ int main()
 		} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::R))
 		{
 			background.rotate(5);
+		} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+		{
+			while(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+			{
+
+			}
+			pipes.push_back(Pipe(&pipeTexture, screenWidth - 100, RANDOMDOUBLE(300, screenHeight - 300), defaultPipeSpacing, defaultPipeSpeed));
 		}
 
 		//controls
@@ -224,6 +243,8 @@ int main()
 			window.draw(pipes[x].getBottomPipe());
 			pipes[x].move();
 		}
+
+		window.draw(startButton);
 
 		window.display();
 		lastframe = std::chrono::high_resolution_clock::now();
