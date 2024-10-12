@@ -66,9 +66,9 @@ public:
 		std::cout << "pipe destroyed!" << std::endl;
 	}
 
-	void move()
+	void move(double deltaTime)
 	{
-		x -= speed;
+		x -= speed * deltaTime;
 
 		topPipe.setPosition(x, y - spacing);
 		bottomPipe.setPosition(x, y + spacing);
@@ -139,7 +139,7 @@ private:
 	sf::Texture* texture;
 	double x, y;
 	double spacing = 0;
-	double speed = 1;
+	double speed = 500; //1
 	double defaultPipeScale = 5;
 
 	bool pipeHasPastPlayer = false;
@@ -168,16 +168,21 @@ int main()
 	double playerY = static_cast<double>(screenHeight) / 2;
 	double playerXvelocity = 0;
 	double playerYvelocity = 0;
-	double gravity = 1.3; 
-	double antiGravity = gravity * 0.1;
+	double gravity = 3000; //1.3
+	double antiGravity = gravity * 0.2; //* 0.1
 	double playerAngle = 0;
-	double playerAngleMultiplier = 100;
+	double playerAngleMultiplier = 0.05;
 	bool playerJumpedLastTime = false;
 	bool playerIsAlive = true;
-	bool startMenu = true;
+	bool startMenu = false;
 	bool pauseMenu = false;
 	bool deathMenu = false;
 	int playerScore = 0;
+
+	//player hitbox?
+	sf::RectangleShape playerHitbox(sf::Vector2f(player.getLocalBounds().width, player.getLocalBounds().height));
+	playerHitbox.setPosition(playerX, playerY);
+	playerHitbox.setFillColor(sf::Color::Red);
 
 	//load pipe stuff
 	sf::Texture pipeTexture;
@@ -188,7 +193,7 @@ int main()
 	}
 	std::vector<Pipe> pipes;
 	double defaultPipeSpacing = 100;
-	double defaultPipeSpeed = 0.2;
+	double defaultPipeSpeed = 500; //0.2
 
 	pipes.emplace_back(Pipe(&pipeTexture, screenWidth - 100, screenHeight / 2, defaultPipeSpacing, defaultPipeSpeed));
 
@@ -206,6 +211,9 @@ int main()
 	background.setScale(sf::Vector2f(7.5, 7.5));
 	background.setOrigin(background.getLocalBounds().width / 2, background.getLocalBounds().height / 2);
 	background.setPosition(static_cast<double>(screenWidth) / 2, static_cast<double>(screenHeight) / 2);
+	double backgroundOriginalX = background.getPosition().x;
+	double backgroundOriginalY = background.getPosition().y;
+	double backgroundSpeed = 50;
 
 	//score
 	sf::Text scoreText;
@@ -246,15 +254,24 @@ int main()
 	startButton.setOrigin(startButton.getLocalBounds().width / 2, startButton.getLocalBounds().height / 2);
 	startButton.setPosition(screenWidth / 2, screenHeight / 2);
 
+	//debug FPS font stuff
+	sf::Text fps;
+	fps.setFont(scoreTextFont);
+	fps.setPosition(10, 100);
+	fps.setString("0");
+
+	//chrono delta time stuff
 	std::chrono::time_point<std::chrono::system_clock> lastlastframe = std::chrono::high_resolution_clock::now();
 	std::chrono::time_point<std::chrono::system_clock> lastframe = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> deltaTime = lastframe - lastlastframe;
-	
+
+	//view and window render stuff
 	sf::View view(sf::FloatRect(0, 0, screenWidth, screenHeight));
 
 	sf::RenderWindow window(sf::VideoMode(screenWidth, screenHeight), "title goes here", sf::Style::Default);
 	window.setView(view);
 	window.setKeyRepeatEnabled(false); //reread documentation for this one buddy Thursday, October 10, 2024, 10:34:00
+	window.setFramerateLimit(200);
 
 	while(window.isOpen())
 	{
@@ -329,28 +346,19 @@ int main()
 			//debug controls
 			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
 			{
-				//background.move(0, -1);
+				background.move(0, -1);
 			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
 			{
-				//background.move(0, 1);
+				background.move(0, 1);
 			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
 			{
-				//background.move(-1, 0);
+				background.move(-1, 0);
 			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
 			{
-				if(window.getSize().x <= window.getSize().y)
-				{
-					view.setViewport(sf::FloatRect(0, 0, 1, (((float)window.getSize().x / 16) * 9) / (float)window.getSize().y));
-				} else
-				{
-					view.setViewport(sf::FloatRect(0, 0, (((float)window.getSize().y / 16) * 9) / (float)window.getSize().x, 1));
-				}
-				window.setView(view);
-
-				//background.move(1, 0);
+				background.move(1, 0);
 			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::R))
 			{
-				//background.rotate(5);
+				background.rotate(5);
 			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
 			{
 				while(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
@@ -372,7 +380,7 @@ int main()
 				playerYvelocity = -1 * antiGravity;
 			} else if(!player.getGlobalBounds().intersects(floor.getGlobalBounds()) && !player.getGlobalBounds().intersects(ceiling.getGlobalBounds()))
 			{
-				//move player
+				//move player down due to gravity (falling)
 				playerYvelocity += gravity * deltaTime.count();
 			} else
 			{
@@ -383,13 +391,20 @@ int main()
 				}
 			}
 
-			playerY += playerYvelocity;
-			playerX += playerXvelocity;
+			playerY += playerYvelocity * deltaTime.count();
+			playerX += playerXvelocity * deltaTime.count();
+			playerHitbox.setPosition(playerX, playerY);
 
-			playerAngle = playerYvelocity * -1 * playerAngleMultiplier;
+			playerAngle = playerYvelocity * -1 * playerAngleMultiplier;// * deltaTime.count();
 
 			player.setPosition(playerX, playerY);
 			player.setRotation(playerAngle);
+
+			if(background.getPosition().x <= backgroundOriginalX - (backgroundTexture.getSize().x * 7))
+			{
+				background.setPosition(backgroundOriginalX, backgroundOriginalY);
+			}
+			background.move(-1 * backgroundSpeed * deltaTime.count(), 0);
 
 			//draw and deltaTime
 			lastlastframe = std::chrono::high_resolution_clock::now();
@@ -400,6 +415,7 @@ int main()
 			window.draw(background);
 			
 			window.draw(player);
+			window.draw(playerHitbox);
 			for(int x = 0; x < pipes.size(); x++)
 			{
 				if(pipes[x].intersects(player.getGlobalBounds()))
@@ -407,7 +423,7 @@ int main()
 					playerIsAlive = false;
 				}
 
-				pipes[x].move();
+				pipes[x].move(deltaTime.count());
 				if(pipes[x].isPastPlayer(playerX) && !pipes[x].hasPastPlayer())
 				{
 					playerScore++;
@@ -425,10 +441,13 @@ int main()
 			}
 
 			window.draw(scoreText);
+			window.draw(fps);
 
 			window.display();
 			lastframe = std::chrono::high_resolution_clock::now();
 			deltaTime = lastframe - lastlastframe;
+
+			fps.setString(std::to_string(1 / deltaTime.count()) + "\ndeltaTime(): " + std::to_string(deltaTime.count()));
 
 			if(playerIsAlive)
 			{
