@@ -1,3 +1,5 @@
+#include <SFML/Graphics/CircleShape.hpp>
+#include <SFML/Graphics/Color.hpp>
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
@@ -205,8 +207,9 @@ int main()
 		std::cerr << "failed to load \"resources/slicebackground.png\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	int backgroundTextureMultiplier = 8;
 	backgroundTexture.setRepeated(true);
-	background.setTextureRect(sf::IntRect(0, 0, backgroundTexture.getSize().x * 7, backgroundTexture.getSize().y));
+	background.setTextureRect(sf::IntRect(0, 0, backgroundTexture.getSize().x * backgroundTextureMultiplier, backgroundTexture.getSize().y));
 	background.setTexture(backgroundTexture);
 	background.setScale(sf::Vector2f(7.5, 7.5));
 	background.setOrigin(background.getLocalBounds().width / 2, background.getLocalBounds().height / 2);
@@ -400,7 +403,7 @@ int main()
 			player.setPosition(playerX, playerY);
 			player.setRotation(playerAngle);
 
-			if(background.getPosition().x <= backgroundOriginalX - (backgroundTexture.getSize().x * 7))
+			if(background.getPosition().x <= backgroundOriginalX - (background.getGlobalBounds().width / backgroundTextureMultiplier))
 			{
 				background.setPosition(backgroundOriginalX, backgroundOriginalY);
 			}
@@ -442,7 +445,7 @@ int main()
 
 			window.draw(scoreText);
 			window.draw(fps);
-
+			
 			window.display();
 			lastframe = std::chrono::high_resolution_clock::now();
 			deltaTime = lastframe - lastlastframe;
