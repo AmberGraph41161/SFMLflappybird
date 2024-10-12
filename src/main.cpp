@@ -267,11 +267,19 @@ int main()
 			}
 			if(event.type == sf::Event::Resized)
 			{
-				std::cout << "event.size.width " << event.size.width << std::endl;
-				std::cout << "event.size.height " << event.size.height << std::endl;
+				//as of Saturday, October 12, 2024, 12:48:52,
+					//I have finally gotten the window resizing crap to work.
+					//yes, I admit it, all the paranthese make it look garbage, but I don't care.
+					//it works, and thats what matters
 
-				std::cout << "window.getSize().x" << window.getSize().x << std::endl;
-				std::cout << "window.getSize().y" << window.getSize().y << std::endl;
+				if((((float)window.getSize().x / 16) * 9) > window.getSize().y)
+				{
+					view.setViewport(sf::FloatRect(0.5 - (((((float)window.getSize().y / 9) * 16) / (float)window.getSize().x) / 2), 0, (((float)window.getSize().y / 9) * 16) / (float)window.getSize().x, 1));
+				} else
+				{
+					view.setViewport(sf::FloatRect(0, 0.5 - (((((float)window.getSize().x / 16) * 9) / (float)window.getSize().y) / 2), 1, (((float)window.getSize().x / 16) * 9) / (float)window.getSize().y));
+				}
+				window.setView(view);
 			}
 		}
 		if(sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
@@ -330,9 +338,13 @@ int main()
 				//background.move(-1, 0);
 			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
 			{
-				std::cout << (((float)window.getSize().x * 16) / 9) << std::endl;
-				std::cout << (((float)window.getSize().y * 9) / 16) << std::endl;
-				view.setViewport(sf::FloatRect(0, 0, 1, 0.2));
+				if(window.getSize().x <= window.getSize().y)
+				{
+					view.setViewport(sf::FloatRect(0, 0, 1, (((float)window.getSize().x / 16) * 9) / (float)window.getSize().y));
+				} else
+				{
+					view.setViewport(sf::FloatRect(0, 0, (((float)window.getSize().y / 16) * 9) / (float)window.getSize().x, 1));
+				}
 				window.setView(view);
 
 				//background.move(1, 0);
