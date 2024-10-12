@@ -35,6 +35,11 @@ void SLEEP(double seconds)
 	}
 }
 
+sf::IntRect spriteSheetFrame(int spriteFrameWidth, int spriteFrameHeight, int frameNumber) //this is only for sprite sheet left to right horiztonal etc etc
+{
+	return sf::IntRect(frameNumber * spriteFrameWidth, 0, spriteFrameWidth, spriteFrameHeight); //x, y, width, height
+}
+
 class Pipe
 {
 public:
@@ -93,9 +98,24 @@ public:
 		return false;
 	}
 
-	bool intersects(sf::FloatRect object)
+	bool isPastPlayer(double playerX)
 	{
-		if(topPipe.getGlobalBounds().intersects(object) || bottomPipe.getGlobalBounds().intersects(object))
+		if(x <= playerX)
+		{
+			pipeHasPastPlayer = true;
+			return true;
+		}
+		return false;
+	}
+
+	bool hasPastPlayer()
+	{
+		return pipeHasPastPlayer;
+	}
+
+	bool intersects(sf::FloatRect objectGlobalBounds)
+	{
+		if(topPipe.getGlobalBounds().intersects(objectGlobalBounds) || bottomPipe.getGlobalBounds().intersects(objectGlobalBounds))
 		{
 			return true;
 		}
@@ -121,6 +141,8 @@ private:
 	double spacing = 0;
 	double speed = 1;
 	double defaultPipeScale = 5;
+
+	bool pipeHasPastPlayer = false;
 };
 
 int main()
@@ -152,6 +174,10 @@ int main()
 	double playerAngleMultiplier = 100;
 	bool playerJumpedLastTime = false;
 	bool playerIsAlive = true;
+	bool startMenu = true;
+	bool pauseMenu = false;
+	bool deathMenu = false;
+	int playerScore = 0;
 
 	//load pipe stuff
 	sf::Texture pipeTexture;
@@ -181,6 +207,19 @@ int main()
 	background.setOrigin(background.getLocalBounds().width / 2, background.getLocalBounds().height / 2);
 	background.setPosition(static_cast<double>(screenWidth) / 2, static_cast<double>(screenHeight) / 2);
 
+	//score
+	sf::Text scoreText;
+	sf::Font scoreTextFont;
+	if(!scoreTextFont.loadFromFile("resources/Minecraftia-Regular.ttf"))
+	{
+		std::cout << "failed to load\"resources/Minecraftia-Regular.ttf\"" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	scoreText.setFont(scoreTextFont);
+	scoreText.setCharacterSize(20);
+	scoreText.setString(std::to_string(playerScore));
+	scoreText.setOrigin(scoreText.getLocalBounds().width / 2, scoreText.getLocalBounds().height / 2);
+
 	//ceiling
 	sf::RectangleShape ceiling(sf::Vector2f(screenWidth, screenHeight * 0.1));
 	ceiling.setFillColor(sf::Color::Cyan);
@@ -198,8 +237,11 @@ int main()
 		std::cerr << "failed to load \"resources/startbutton-Sheet.png\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	int startButtonFrameWidth = 33;
+	int startButtonFrameHeight = 13;
+
 	startButton.setTexture(startButtonTexture);
-	startButton.setTextureRect(sf::IntRect(0, 0, 33, 13));
+	startButton.setTextureRect(sf::IntRect(0, 0, startButtonFrameWidth, startButtonFrameHeight));
 	startButton.setScale(sf::Vector2f(10, 10));
 	startButton.setOrigin(startButton.getLocalBounds().width / 2, startButton.getLocalBounds().height / 2);
 	startButton.setPosition(screenWidth / 2, screenHeight / 2);
@@ -230,7 +272,6 @@ int main()
 
 				std::cout << "window.getSize().x" << window.getSize().x << std::endl;
 				std::cout << "window.getSize().y" << window.getSize().y << std::endl;
-
 			}
 		}
 		if(sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
@@ -238,119 +279,164 @@ int main()
 			window.close();
 		}
 
-		//debug controls
-		if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+		//startscreen and or pause menu
+		if(startMenu || pauseMenu)
 		{
-			//background.move(0, -1);
-		} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-		{
-			//background.move(0, 1);
-		} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-		{
-			//background.move(-1, 0);
-		} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-		{
-			std::cout << (((float)window.getSize().x * 16) / 9) << std::endl;
-			std::cout << (((float)window.getSize().y * 9) / 16) << std::endl;
-			view.setViewport(sf::FloatRect(0, 0, 1, 0.2));
-			window.setView(view);
-
-			//background.move(1, 0);
-		} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::R))
-		{
-			//background.rotate(5);
-		} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-		{
-			while(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+			//draw and deltaTime
+			lastlastframe = std::chrono::high_resolution_clock::now();
+			window.clear(sf::Color::Black);
+			
+			window.draw(background);
+			
+			if(startButton.getGlobalBounds().contains(sf::Vector2f(window.mapPixelToCoords(sf::Mouse::getPosition(window), view)))) //view is in coords, without view is in pixels
 			{
-
-			}
-			pipes.emplace_back(Pipe(&pipeTexture, screenWidth - 100, RANDOMDOUBLE(300, screenHeight - 300), defaultPipeSpacing, defaultPipeSpeed));
-		}
-
-		//controls
-		if(!sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && playerJumpedLastTime)
-		{
-			playerJumpedLastTime = false;
-		}
-
-		if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && !playerJumpedLastTime)
-		{
-			playerJumpedLastTime = true;
-			playerYvelocity = -1 * antiGravity;
-		} else if(!player.getGlobalBounds().intersects(floor.getGlobalBounds()) && !player.getGlobalBounds().intersects(ceiling.getGlobalBounds()))
-		{
-			//move player
-			playerYvelocity += gravity * deltaTime.count();
-		} else
-		{
-			playerYvelocity = 0;
-			if(player.getGlobalBounds().intersects(ceiling.getGlobalBounds()))
+				startButton.setTextureRect(spriteSheetFrame(startButtonFrameWidth, startButtonFrameHeight, 1));
+				if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
+				{
+					for(int x = 0 + 2; x < 8 + 2; x++)
+					{
+						startButton.setTextureRect(spriteSheetFrame(startButtonFrameWidth, startButtonFrameHeight, 2 + (x % 2)));
+						window.clear(sf::Color::Black);
+						window.draw(background);
+						window.draw(startButton);
+						window.display();
+						SLEEP(0.1);
+					}
+					startMenu = false;
+					playerIsAlive = true;
+				}
+			} else
 			{
-				playerY = ceiling.getGlobalBounds().height + player.getGlobalBounds().top;
+				startButton.setTextureRect(spriteSheetFrame(startButtonFrameWidth, startButtonFrameHeight, 0));
 			}
-		}
 
-		playerY += playerYvelocity;
-		playerX += playerXvelocity;
+			window.draw(startButton);
 
-		playerAngle = playerYvelocity * -1 * playerAngleMultiplier;
+			window.display();
+			lastframe = std::chrono::high_resolution_clock::now();
+			deltaTime = lastframe - lastlastframe;
 
-		player.setPosition(playerX, playerY);
-		player.setRotation(playerAngle);
+		} else //the game (maybe this is a bad idea...?)
+		{
+			//debug controls
+			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+			{
+				//background.move(0, -1);
+			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+			{
+				//background.move(0, 1);
+			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+			{
+				//background.move(-1, 0);
+			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+			{
+				std::cout << (((float)window.getSize().x * 16) / 9) << std::endl;
+				std::cout << (((float)window.getSize().y * 9) / 16) << std::endl;
+				view.setViewport(sf::FloatRect(0, 0, 1, 0.2));
+				window.setView(view);
 
-		//draw and deltaTime
-		lastlastframe = std::chrono::high_resolution_clock::now();
-		window.clear(sf::Color::Black);
-	
-		window.draw(ceiling);
-		window.draw(floor);
-		window.draw(background);
+				//background.move(1, 0);
+			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::R))
+			{
+				//background.rotate(5);
+			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+			{
+				while(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+				{
+
+				}
+				pipes.emplace_back(Pipe(&pipeTexture, screenWidth - 100, RANDOMDOUBLE(300, screenHeight - 300), defaultPipeSpacing, defaultPipeSpeed));
+			}
+
+			//controls
+			if(!sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && playerJumpedLastTime)
+			{
+				playerJumpedLastTime = false;
+			}
+
+			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && !playerJumpedLastTime)
+			{
+				playerJumpedLastTime = true;
+				playerYvelocity = -1 * antiGravity;
+			} else if(!player.getGlobalBounds().intersects(floor.getGlobalBounds()) && !player.getGlobalBounds().intersects(ceiling.getGlobalBounds()))
+			{
+				//move player
+				playerYvelocity += gravity * deltaTime.count();
+			} else
+			{
+				playerYvelocity = 0;
+				if(player.getGlobalBounds().intersects(ceiling.getGlobalBounds()))
+				{
+					playerY = ceiling.getGlobalBounds().height + player.getGlobalBounds().top;
+				}
+			}
+
+			playerY += playerYvelocity;
+			playerX += playerXvelocity;
+
+			playerAngle = playerYvelocity * -1 * playerAngleMultiplier;
+
+			player.setPosition(playerX, playerY);
+			player.setRotation(playerAngle);
+
+			//draw and deltaTime
+			lastlastframe = std::chrono::high_resolution_clock::now();
+			window.clear(sf::Color::Black);
 		
-		window.draw(player);
-		for(int x = 0; x < pipes.size(); x++)
-		{
-			if(pipes[x].intersects(player.getGlobalBounds()))
+			window.draw(ceiling);
+			window.draw(floor);
+			window.draw(background);
+			
+			window.draw(player);
+			for(int x = 0; x < pipes.size(); x++)
 			{
-				playerIsAlive = false;
+				if(pipes[x].intersects(player.getGlobalBounds()))
+				{
+					playerIsAlive = false;
+				}
+
+				pipes[x].move();
+				if(pipes[x].isPastPlayer(playerX) && !pipes[x].hasPastPlayer())
+				{
+					playerScore++;
+				}
+
+				if(pipes[x].isOffScreen(0, view.getSize().x, 0, screenHeight))
+				{
+					pipes.erase(pipes.begin() + x);
+					x--;
+					continue;
+				}
+
+				window.draw(pipes[x].getTopPipe());
+				window.draw(pipes[x].getBottomPipe());
 			}
 
-			pipes[x].move();
-			if(pipes[x].isOffScreen(0, view.getSize().x, 0, screenHeight))
+			window.draw(scoreText);
+
+			window.display();
+			lastframe = std::chrono::high_resolution_clock::now();
+			deltaTime = lastframe - lastlastframe;
+
+			if(playerIsAlive)
 			{
-				pipes.erase(pipes.begin() + x);
-				x--;
-				continue;
+				std::cout << "ALIVE" << std::endl;
+				std::cout << playerScore << std::endl;
+			} else
+			{
+				std::cout << "DEAD" << std::endl;
 			}
 
-			window.draw(pipes[x].getTopPipe());
-			window.draw(pipes[x].getBottomPipe());
+			//SLEEP(0.001);
+			/*
+			std::cout << "playerX" << playerX << std::endl;
+			std::cout << "playerY" << playerY << std::endl;
+			std::cout << "playerXvelocity" << playerXvelocity << std::endl;
+			std::cout << "playerYvelocity" << playerYvelocity << std::endl;
+			std::cout << "playerAngle" << playerAngle << std::endl;
+			*/
 		}
-
-		window.draw(startButton);
-
-		window.display();
-		lastframe = std::chrono::high_resolution_clock::now();
-		deltaTime = lastframe - lastlastframe;
-
-		if(playerIsAlive)
-		{
-			std::cout << "ALIVE" << std::endl;
-		} else
-		{
-			std::cout << "DEAD" << std::endl;
-		}
-
-		//SLEEP(0.001);
-		/*
-		std::cout << "playerX" << playerX << std::endl;
-		std::cout << "playerY" << playerY << std::endl;
-		std::cout << "playerXvelocity" << playerXvelocity << std::endl;
-		std::cout << "playerYvelocity" << playerYvelocity << std::endl;
-		std::cout << "playerAngle" << playerAngle << std::endl;
-		*/
 	}
-
 
 	std::cout << "[done!]" << std::endl;
 	return 0;

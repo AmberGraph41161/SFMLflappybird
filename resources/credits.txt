@@ -1,2 +1,10 @@
 found pipe and flappybird texture over at: "https://github.com/thomasfinch/Flappy-Bird-Wii/tree/master/textures"
 	at 12:23PM, Friday, January 27, 2023 (1/27/2023)
+
+used textures I found from credit above to make my own sprites of flappybird and pipes assets in aseprite, confirmed as of Thursday, October 10, 2024, 14:35:31
+
+minecraft font:
+	found on the website:
+		"https://www.dafont.com/bitmap.php"
+	author:
+		"https://www.dafont.com/andrew-tyler.d2526"
