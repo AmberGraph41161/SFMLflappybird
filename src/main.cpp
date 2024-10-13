@@ -150,6 +150,11 @@ private:
 	bool pipeHasPastPlayer = false;
 };
 
+void spawnDefaultRandomPipe(std::vector<Pipe> &pipes, sf::Texture *pipeTexture, double screenWidth, double screenHeight)
+{
+	pipes.emplace_back(Pipe(pipeTexture, screenWidth + RANDOM(0, 500), RANDOMDOUBLE((screenHeight / 2) - 200, (screenHeight / 2) + 200), RANDOMDOUBLE(70, 200), RANDOMDOUBLE(300, 700)));
+}
+
 void pipeTunnel(std::vector<Pipe> &pipes, sf::Texture *pipeTexture, int nPipes, double startX, double startY, double pipeSpacing = 120, double pipeSpeed = 500, double pipeXspacing = 200)
 {
 	for(int x = 0; x < nPipes; x++)
@@ -169,6 +174,7 @@ void pipeShrinkTunnel(std::vector<Pipe> &pipes, sf::Texture *pipeTexture, int nP
 int main()
 {
 	std::cout << "[doing setup crap]" << std::endl;
+	srand(time(0));
 
 	const double screenWidth = 1080;
 	const double screenHeight = 720;
@@ -206,7 +212,7 @@ int main()
 	playerHitbox.setPosition(playerX, playerY);
 	playerHitbox.setFillColor(sf::Color::Red);
 
-	//load pipe stuff
+	//load pipe stuff pipes
 	sf::Texture pipeTexture;
 	if(!pipeTexture.loadFromFile("resources/longpipe.png"))
 	{
@@ -216,6 +222,7 @@ int main()
 	std::vector<Pipe> pipes;
 	double defaultPipeSpacing = 100;
 	double defaultPipeSpeed = 500; //0.2
+	bool pipesSubroutine = false;
 
 	pipes.emplace_back(Pipe(&pipeTexture, screenWidth - 100, screenHeight / 2, defaultPipeSpacing, defaultPipeSpeed));
 
@@ -453,7 +460,7 @@ int main()
 				pauseMenu = true;
 			}
 
-			//controls
+			//player controls
 			if(!sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && playerJumpedLastTime)
 			{
 				playerJumpedLastTime = false;
@@ -471,13 +478,22 @@ int main()
 				playerYvelocity += gravity * deltaTime.count();
 			} else
 			{
+				//player is touching either floor or ceiling maybe? so check?
 				playerYvelocity = 0;
+
+				//ceiling?
 				if(playerHitbox.getGlobalBounds().intersects(ceiling.getGlobalBounds()))
 				{
 					playerY = ceiling.getGlobalBounds().height + player.getGlobalBounds().top;
+				} else if(playerHitbox.getGlobalBounds().intersects(floor.getGlobalBounds()) || playerHitbox.getPosition().y >= floor.getPosition().y)
+				{
+					playerIsAlive = false;
+					deadSFX.play();
+					continue;
 				}
 			}
 
+			//update player
 			playerY += playerYvelocity * deltaTime.count();
 			playerX += playerXvelocity * deltaTime.count();
 
@@ -487,6 +503,7 @@ int main()
 			player.setPosition(playerX, playerY);
 			player.setRotation(playerAngle);
 
+			//update background
 			if(background.getPosition().x <= backgroundOriginalX - (background.getGlobalBounds().width / backgroundTextureMultiplier))
 			{
 				background.setPosition(backgroundOriginalX, backgroundOriginalY);
@@ -497,12 +514,17 @@ int main()
 			lastlastframe = std::chrono::high_resolution_clock::now();
 			window.clear(sf::Color::Black);
 		
-			window.draw(background);
 			window.draw(ceiling);
 			window.draw(floor);
+			window.draw(background);
 			
 			window.draw(player);
 			//window.draw(playerHitbox);
+			if(pipes.size() <= 0 && pipesSubroutine)
+			{
+				pipesSubroutine = false;
+				spawnDefaultRandomPipe(pipes, &pipeTexture, screenWidth, screenHeight);
+			}
 			for(int x = 0; x < pipes.size(); x++)
 			{
 				if(pipes[x].intersects(player.getGlobalBounds()))
@@ -518,9 +540,21 @@ int main()
 					playerScore++;
 					scoreText.setString(std::to_string(playerScore));
 					scoreSFX.play();
+					if(RANDOM(0, 10) == 5 && !pipesSubroutine)
+					{
+						pipeTunnel(pipes, &pipeTexture, RANDOM(0, 20), screenWidth - 100, screenHeight / 2);
+						pipesSubroutine = true;
+					} else if(RANDOM(0, 15) == 5 && !pipesSubroutine)
+					{
+						pipeShrinkTunnel(pipes, &pipeTexture, RANDOM(0, 20), screenWidth - 100, screenHeight / 2);
+						pipesSubroutine = true;
+					} else if(!pipesSubroutine)
+					{
+						spawnDefaultRandomPipe(pipes, &pipeTexture, screenWidth, screenHeight);
+					}
 				}
 
-				if(pipes[x].isOffScreen(0, view.getSize().x + 1000, 0, screenHeight))
+				if(pipes[x].isOffScreen(0 - 200, view.getSize().x + 10000, 0, screenHeight))
 				{
 					pipes.erase(pipes.begin() + x);
 					x--;
@@ -581,10 +615,17 @@ int main()
 				playerX = screenWidth / 2;
 				playerY = screenHeight / 2;
 
+				playerJumpedLastTime = false;
+
 				playerIsAlive = true;
 				startMenu = true;
 
 				scoreText.setString("0");
+				playerHitbox.setPosition(playerX, playerY);
+				player.setPosition(playerX, playerY);
+				player.setRotation(playerAngle);
+
+				spawnDefaultRandomPipe(pipes, &pipeTexture, screenWidth, screenHeight);
 			}
 		}
 	}
