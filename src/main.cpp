@@ -145,7 +145,7 @@ private:
 	double x, y;
 	double spacing = 0;
 	double speed = 500; //1
-	double defaultPipeScale = 5;
+	double defaultPipeScale = 4;
 
 	bool pipeHasPastPlayer = false;
 };
@@ -185,8 +185,8 @@ int main()
 	player.setOrigin(player.getLocalBounds().width / 2, player.getLocalBounds().height / 2);
 	player.setScale(sf::Vector2f(4, 4));
 
-	double playerX = static_cast<double>(screenWidth) / 2;
-	double playerY = static_cast<double>(screenHeight) / 2;
+	double playerX = screenWidth / 2;
+	double playerY = screenHeight / 2;
 	double playerXvelocity = 0;
 	double playerYvelocity = 0;
 	double gravity = 3000; //1.3
@@ -308,6 +308,15 @@ int main()
 	}
 	jumpSFX.setBuffer(jumpSFXbuffer);
 
+	sf::Sound deadSFX;
+	sf::SoundBuffer deadSFXbuffer;
+	if(!deadSFXbuffer.loadFromFile("resources/dead0.wav"))
+	{
+		std::cerr << "failed to load \"resources/dead0.wav\"" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	deadSFX.setBuffer(deadSFXbuffer);
+
 	//debug FPS font stuff
 	sf::Text fps;
 	fps.setFont(scoreTextFont);
@@ -406,7 +415,7 @@ int main()
 			lastframe = std::chrono::high_resolution_clock::now();
 			deltaTime = lastframe - lastlastframe;
 
-		} else //the game (maybe this is a bad idea...?)
+		} else if(playerIsAlive)//the game (maybe this is a bad idea...?)
 		{
 			//debug controls
 			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
@@ -450,7 +459,7 @@ int main()
 				playerJumpedLastTime = false;
 			}
 
-			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && !playerJumpedLastTime)
+			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && !playerJumpedLastTime && playerIsAlive)
 			{
 				playerJumpedLastTime = true;
 				playerYvelocity = -1 * antiGravity;
@@ -471,10 +480,10 @@ int main()
 
 			playerY += playerYvelocity * deltaTime.count();
 			playerX += playerXvelocity * deltaTime.count();
-			playerHitbox.setPosition(playerX, playerY);
 
 			playerAngle = playerYvelocity * -1 * playerAngleMultiplier;// * deltaTime.count();
 
+			playerHitbox.setPosition(playerX, playerY);
 			player.setPosition(playerX, playerY);
 			player.setRotation(playerAngle);
 
@@ -499,6 +508,8 @@ int main()
 				if(pipes[x].intersects(player.getGlobalBounds()))
 				{
 					playerIsAlive = false;
+					deadSFX.play();
+					break;
 				}
 
 				pipes[x].move(deltaTime.count());
@@ -528,24 +539,53 @@ int main()
 			deltaTime = lastframe - lastlastframe;
 
 			fps.setString(std::to_string(1 / deltaTime.count()) + "\ndeltaTime(): " + std::to_string(deltaTime.count()));
+		} else if(!playerIsAlive)
+		{
+			playerYvelocity += gravity * deltaTime.count();
 
-			if(playerIsAlive)
+			playerY += playerYvelocity * deltaTime.count();
+			playerX += playerXvelocity * deltaTime.count();
+
+			playerAngle = playerYvelocity * -1 * playerAngleMultiplier;// * deltaTime.count();
+
+			playerHitbox.setPosition(playerX, playerY);
+			player.setPosition(playerX, playerY);
+			player.setRotation(playerAngle);
+
+			//draw and deltaTime
+			lastlastframe = std::chrono::high_resolution_clock::now();
+			window.clear(sf::Color::Black);
+		
+			window.draw(background);
+			for(int x = 0; x < pipes.size(); x++)
 			{
-				std::cout << "ALIVE" << std::endl;
-				std::cout << playerScore << std::endl;
-			} else
-			{
-				std::cout << "DEAD" << std::endl;
+				window.draw(pipes[x].getTopPipe());
+				window.draw(pipes[x].getBottomPipe());
 			}
+			window.draw(player);
 
-			//SLEEP(0.001);
-			/*
-			std::cout << "playerX" << playerX << std::endl;
-			std::cout << "playerY" << playerY << std::endl;
-			std::cout << "playerXvelocity" << playerXvelocity << std::endl;
-			std::cout << "playerYvelocity" << playerYvelocity << std::endl;
-			std::cout << "playerAngle" << playerAngle << std::endl;
-			*/
+			window.draw(scoreText);
+			window.draw(fps);
+			
+			window.display();
+			lastframe = std::chrono::high_resolution_clock::now();
+			deltaTime = lastframe - lastlastframe;
+
+			if(player.getPosition().y >= screenHeight)
+			{
+				pipes.clear();
+
+				playerScore = 0;
+				playerXvelocity = 0;
+				playerYvelocity = 0;
+				playerX = screenWidth / 2;
+				playerY = screenHeight / 2;
+
+				playerIsAlive = true;
+				startMenu = true;
+
+				scoreText.setString("0");
+			}
 		}
 	}
 
