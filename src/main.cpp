@@ -1,16 +1,19 @@
-#include <SFML/Graphics/CircleShape.hpp>
-#include <SFML/Graphics/Color.hpp>
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
 #include <chrono>
-#include <SFML/Graphics.hpp>
-#include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Keyboard.hpp>
 #include <SFML/Window/VideoMode.hpp>
+#include <SFML/System/Vector2.hpp>
+#include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/Rect.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
-#include <SFML/System/Vector2.hpp>
+#include <SFML/Graphics.hpp>
+#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Graphics/Color.hpp>
+#include <SFML/Audio.hpp>
+#include <SFML/Audio/Sound.hpp>
+
 
 int RANDOM(int minimum, int maximum)
 {
@@ -147,6 +150,22 @@ private:
 	bool pipeHasPastPlayer = false;
 };
 
+void pipeTunnel(std::vector<Pipe> &pipes, sf::Texture *pipeTexture, int nPipes, double startX, double startY, double pipeSpacing = 120, double pipeSpeed = 500, double pipeXspacing = 200)
+{
+	for(int x = 0; x < nPipes; x++)
+	{
+		pipes.emplace_back(Pipe(pipeTexture, startX + (x * pipeXspacing), startY, pipeSpacing, pipeSpeed));
+	}
+}
+
+void pipeShrinkTunnel(std::vector<Pipe> &pipes, sf::Texture *pipeTexture, int nPipes, double startX, double startY, double pipeSpacing = 250, double pipeSpeed = 500, double pipeXspacing = 100)
+{
+	for(int x = 0; x < nPipes; x++)
+	{
+		pipes.emplace_back(Pipe(pipeTexture, startX + (x * pipeXspacing), startY, pipeSpacing - (10 * x), pipeSpeed));
+	}
+}
+
 int main()
 {
 	std::cout << "[doing setup crap]" << std::endl;
@@ -176,13 +195,14 @@ int main()
 	double playerAngleMultiplier = 0.05;
 	bool playerJumpedLastTime = false;
 	bool playerIsAlive = true;
-	bool startMenu = false;
+	bool startMenu = true;
 	bool pauseMenu = false;
 	bool deathMenu = false;
 	int playerScore = 0;
 
 	//player hitbox?
-	sf::RectangleShape playerHitbox(sf::Vector2f(player.getLocalBounds().width, player.getLocalBounds().height));
+	sf::RectangleShape playerHitbox(sf::Vector2f(player.getGlobalBounds().width, player.getGlobalBounds().height));
+	playerHitbox.setOrigin(playerHitbox.getLocalBounds().width / 2, playerHitbox.getLocalBounds().height / 2);
 	playerHitbox.setPosition(playerX, playerY);
 	playerHitbox.setFillColor(sf::Color::Red);
 
@@ -227,9 +247,11 @@ int main()
 		exit(EXIT_FAILURE);
 	}
 	scoreText.setFont(scoreTextFont);
-	scoreText.setCharacterSize(20);
+	scoreText.setCharacterSize(50);
+	//scoreText.setScale(sf::Vector2f(2, 2));
 	scoreText.setString(std::to_string(playerScore));
 	scoreText.setOrigin(scoreText.getLocalBounds().width / 2, scoreText.getLocalBounds().height / 2);
+	scoreText.setPosition(screenWidth / 2, screenHeight * 0.2);
 
 	//ceiling
 	sf::RectangleShape ceiling(sf::Vector2f(screenWidth, screenHeight * 0.1));
@@ -250,12 +272,41 @@ int main()
 	}
 	int startButtonFrameWidth = 33;
 	int startButtonFrameHeight = 13;
+	bool startButtonHoveredOver = false;
 
 	startButton.setTexture(startButtonTexture);
 	startButton.setTextureRect(sf::IntRect(0, 0, startButtonFrameWidth, startButtonFrameHeight));
 	startButton.setScale(sf::Vector2f(10, 10));
 	startButton.setOrigin(startButton.getLocalBounds().width / 2, startButton.getLocalBounds().height / 2);
 	startButton.setPosition(screenWidth / 2, screenHeight / 2);
+
+	//load music and sound effects sfx
+	sf::Sound scoreSFX;
+	sf::SoundBuffer scoreSFXbuffer;
+	if(!scoreSFXbuffer.loadFromFile("resources/score1.wav"))
+	{
+		std::cerr << "failed to load \"resources/score1.wav\"" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	scoreSFX.setBuffer(scoreSFXbuffer);
+
+	sf::Sound menuSFX;
+	sf::SoundBuffer menuSFXbuffer;
+	if(!menuSFXbuffer.loadFromFile("resources/menu0.wav"))
+	{
+		std::cerr << "failed to load \"resources/menu0.wav\"" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	menuSFX.setBuffer(menuSFXbuffer);
+
+	sf::Sound jumpSFX;
+	sf::SoundBuffer jumpSFXbuffer;
+	if(!jumpSFXbuffer.loadFromFile("resources/jump0.wav"))
+	{
+		std::cerr << "failed to load \"resources/jump0.wav\"" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	jumpSFX.setBuffer(jumpSFXbuffer);
 
 	//debug FPS font stuff
 	sf::Text fps;
@@ -319,8 +370,16 @@ int main()
 			if(startButton.getGlobalBounds().contains(sf::Vector2f(window.mapPixelToCoords(sf::Mouse::getPosition(window), view)))) //view is in coords, without view is in pixels
 			{
 				startButton.setTextureRect(spriteSheetFrame(startButtonFrameWidth, startButtonFrameHeight, 1));
+
+				if(!startButtonHoveredOver)
+				{
+					menuSFX.play();
+				}
+				startButtonHoveredOver = true;
+
 				if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
 				{
+					menuSFX.play();
 					for(int x = 0 + 2; x < 8 + 2; x++)
 					{
 						startButton.setTextureRect(spriteSheetFrame(startButtonFrameWidth, startButtonFrameHeight, 2 + (x % 2)));
@@ -331,10 +390,13 @@ int main()
 						SLEEP(0.1);
 					}
 					startMenu = false;
+					pauseMenu = false;
 					playerIsAlive = true;
+					continue;
 				}
 			} else
 			{
+				startButtonHoveredOver = false;
 				startButton.setTextureRect(spriteSheetFrame(startButtonFrameWidth, startButtonFrameHeight, 0));
 			}
 
@@ -349,19 +411,24 @@ int main()
 			//debug controls
 			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
 			{
-				background.move(0, -1);
+				while(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+				{
+
+				}
+				pipeShrinkTunnel(pipes, &pipeTexture, 40, screenWidth - 100, screenHeight / 2);
 			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
 			{
-				background.move(0, 1);
+				while(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+				{
+
+				}
+				pipeTunnel(pipes, &pipeTexture, 100, screenWidth - 100, screenHeight / 2);
 			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
 			{
-				background.move(-1, 0);
 			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
 			{
-				background.move(1, 0);
 			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::R))
 			{
-				background.rotate(5);
 			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
 			{
 				while(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
@@ -369,6 +436,12 @@ int main()
 
 				}
 				pipes.emplace_back(Pipe(&pipeTexture, screenWidth - 100, RANDOMDOUBLE(300, screenHeight - 300), defaultPipeSpacing, defaultPipeSpeed));
+			}
+
+			//pause menu...?
+			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+			{
+				pauseMenu = true;
 			}
 
 			//controls
@@ -381,14 +454,16 @@ int main()
 			{
 				playerJumpedLastTime = true;
 				playerYvelocity = -1 * antiGravity;
-			} else if(!player.getGlobalBounds().intersects(floor.getGlobalBounds()) && !player.getGlobalBounds().intersects(ceiling.getGlobalBounds()))
+
+				jumpSFX.play();
+			} else if(!playerHitbox.getGlobalBounds().intersects(floor.getGlobalBounds()) && !playerHitbox.getGlobalBounds().intersects(ceiling.getGlobalBounds()))
 			{
 				//move player down due to gravity (falling)
 				playerYvelocity += gravity * deltaTime.count();
 			} else
 			{
 				playerYvelocity = 0;
-				if(player.getGlobalBounds().intersects(ceiling.getGlobalBounds()))
+				if(playerHitbox.getGlobalBounds().intersects(ceiling.getGlobalBounds()))
 				{
 					playerY = ceiling.getGlobalBounds().height + player.getGlobalBounds().top;
 				}
@@ -413,12 +488,12 @@ int main()
 			lastlastframe = std::chrono::high_resolution_clock::now();
 			window.clear(sf::Color::Black);
 		
+			window.draw(background);
 			window.draw(ceiling);
 			window.draw(floor);
-			window.draw(background);
 			
 			window.draw(player);
-			window.draw(playerHitbox);
+			//window.draw(playerHitbox);
 			for(int x = 0; x < pipes.size(); x++)
 			{
 				if(pipes[x].intersects(player.getGlobalBounds()))
@@ -427,12 +502,14 @@ int main()
 				}
 
 				pipes[x].move(deltaTime.count());
-				if(pipes[x].isPastPlayer(playerX) && !pipes[x].hasPastPlayer())
+				if(!pipes[x].hasPastPlayer() && pipes[x].isPastPlayer(playerX))
 				{
 					playerScore++;
+					scoreText.setString(std::to_string(playerScore));
+					scoreSFX.play();
 				}
 
-				if(pipes[x].isOffScreen(0, view.getSize().x, 0, screenHeight))
+				if(pipes[x].isOffScreen(0, view.getSize().x + 1000, 0, screenHeight))
 				{
 					pipes.erase(pipes.begin() + x);
 					x--;
