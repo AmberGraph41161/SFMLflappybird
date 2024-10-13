@@ -207,7 +207,7 @@ int main()
 	int playerScore = 0;
 
 	//player hitbox?
-	sf::RectangleShape playerHitbox(sf::Vector2f(player.getGlobalBounds().width, player.getGlobalBounds().height));
+	sf::RectangleShape playerHitbox(sf::Vector2f(player.getGlobalBounds().width * 0.5, player.getGlobalBounds().height * 0.7));
 	playerHitbox.setOrigin(playerHitbox.getLocalBounds().width / 2, playerHitbox.getLocalBounds().height / 2);
 	playerHitbox.setPosition(playerX, playerY);
 	playerHitbox.setFillColor(sf::Color::Red);
