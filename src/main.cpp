@@ -1,7 +1,8 @@
+#include <iostream>
 #include <cstdlib>
 #include <ctime>
-#include <iostream>
 #include <chrono>
+#include <fstream>
 #include <SFML/Window/Keyboard.hpp>
 #include <SFML/Window/VideoMode.hpp>
 #include <SFML/System/Vector2.hpp>
@@ -43,6 +44,23 @@ void SLEEP(double seconds)
 sf::IntRect spriteSheetFrame(int spriteFrameWidth, int spriteFrameHeight, int frameNumber) //this is only for sprite sheet left to right horiztonal etc etc
 {
 	return sf::IntRect(frameNumber * spriteFrameWidth, 0, spriteFrameWidth, spriteFrameHeight); //x, y, width, height
+}
+
+void appendHighScore(int score, std::string playerName = "player")
+{
+	std::fstream write;
+	write.open("dat/scores.txt", std::fstream::out | std::fstream::app);
+	if(write.fail())
+	{
+		std::cerr << "failed to open \"dat/scores.txt\"" << std::endl;
+		write.close();
+		return;
+	}
+
+	std::cout << "saving score..." << std::endl;
+	write << playerName << ' ' << score << '\n';
+	write.close();
+	std::cout << "done saving score!" << std::endl;
 }
 
 class Pipe
@@ -277,8 +295,8 @@ int main()
 		std::cerr << "failed to load \"resources/startbutton-Sheet.png\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	int startButtonFrameWidth = 33;
-	int startButtonFrameHeight = 13;
+	const int startButtonFrameWidth = 33;
+	const int startButtonFrameHeight = 13;
 	bool startButtonHoveredOver = false;
 
 	startButton.setTexture(startButtonTexture);
@@ -286,6 +304,26 @@ int main()
 	startButton.setScale(sf::Vector2f(10, 10));
 	startButton.setOrigin(startButton.getLocalBounds().width / 2, startButton.getLocalBounds().height / 2);
 	startButton.setPosition(screenWidth / 2, screenHeight / 2);
+
+	//death menu & high score screen
+	sf::Sprite playAgainButton;
+	sf::Texture playAgainButtonTexture;
+	if(!playAgainButtonTexture.loadFromFile("resources/playagainbutton-Sheet.png"))
+	{
+		std::cerr << "failed to load \"resources/playagainbutton-Sheet.png\"" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	const int playAgainButtonFrameWidth = 68;
+	const int playAgainButtonFrameHeight = 13;
+	bool playAgainButtonHoveredOver = false;
+	std::chrono::duration<double> animatePlayAgainButtonDuration = std::chrono::seconds::zero();
+	double animatePlayAgainButtonDurationThreshold = 0.4;
+
+	playAgainButton.setTexture(playAgainButtonTexture);
+	playAgainButton.setTextureRect(sf::IntRect(0, 0, playAgainButtonFrameWidth, playAgainButtonFrameHeight));
+	playAgainButton.setScale(sf::Vector2f(10, 10));
+	playAgainButton.setOrigin(playAgainButton.getLocalBounds().width / 2, playAgainButton.getLocalBounds().height / 2);
+	playAgainButton.setPosition(screenWidth / 2, screenHeight / 2);
 
 	//load music and sound effects sfx
 	sf::Sound scoreSFX;
@@ -422,7 +460,7 @@ int main()
 			lastframe = std::chrono::high_resolution_clock::now();
 			deltaTime = lastframe - lastlastframe;
 
-		} else if(playerIsAlive)//the game (maybe this is a bad idea...?)
+		} else if(playerIsAlive && !deathMenu)//the game (maybe this is a bad idea...?)
 		{
 			//debug controls
 			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
@@ -617,16 +655,67 @@ int main()
 
 				playerJumpedLastTime = false;
 
-				playerIsAlive = true;
-				startMenu = true;
-
 				scoreText.setString("0");
 				playerHitbox.setPosition(playerX, playerY);
 				player.setPosition(playerX, playerY);
 				player.setRotation(playerAngle);
 
 				spawnDefaultRandomPipe(pipes, &pipeTexture, screenWidth, screenHeight);
+				playerIsAlive = true;
+				deathMenu = true;
 			}
+		} else if(deathMenu)
+		{
+			animatePlayAgainButtonDuration += deltaTime;
+
+			lastlastframe = std::chrono::high_resolution_clock::now();
+			window.clear(sf::Color::Black);
+			
+			window.draw(background);
+			
+			if(playAgainButton.getGlobalBounds().contains(sf::Vector2f(window.mapPixelToCoords(sf::Mouse::getPosition(window), view)))) //view is in coords, without view is in pixels
+			{
+				playAgainButton.setTextureRect(spriteSheetFrame(playAgainButtonFrameWidth, playAgainButtonFrameHeight, 2));
+
+				if(!playAgainButtonHoveredOver)
+				{
+					menuSFX.play();
+				}
+				playAgainButtonHoveredOver = true;
+
+				if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
+				{
+					menuSFX.play();
+					for(int x = 0 + 2; x < 8 + 2; x++)
+					{
+						playAgainButton.setTextureRect(spriteSheetFrame(playAgainButtonFrameWidth, playAgainButtonFrameHeight, 3 + (x % 2)));
+						window.clear(sf::Color::Black);
+						window.draw(background);
+						window.draw(playAgainButton);
+						window.display();
+						SLEEP(0.1);
+					}
+					deathMenu = false;
+					continue;
+				}
+			} else
+			{
+				playAgainButtonHoveredOver = false;
+				if(animatePlayAgainButtonDuration.count() >= animatePlayAgainButtonDurationThreshold * 2)
+				{
+					playAgainButton.setTextureRect(spriteSheetFrame(playAgainButtonFrameWidth, playAgainButtonFrameHeight, 0));
+					animatePlayAgainButtonDuration = std::chrono::seconds::zero();
+				} else if(animatePlayAgainButtonDuration.count() >= animatePlayAgainButtonDurationThreshold)
+				{
+					playAgainButton.setTextureRect(spriteSheetFrame(playAgainButtonFrameWidth, playAgainButtonFrameHeight, 1));
+				}
+			}
+
+			window.draw(playAgainButton);
+
+			window.display();
+			lastframe = std::chrono::high_resolution_clock::now();
+			deltaTime = lastframe - lastlastframe;
 		}
 	}
 
