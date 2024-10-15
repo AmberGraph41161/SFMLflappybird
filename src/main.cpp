@@ -224,6 +224,8 @@ int main()
 	bool deathMenu = false;
 	int playerScore = 0;
 
+	bool displayHitboxes = false;
+
 	//player hitbox?
 	sf::RectangleShape playerHitbox(sf::Vector2f(player.getGlobalBounds().width * 0.5, player.getGlobalBounds().height * 0.7));
 	playerHitbox.setOrigin(playerHitbox.getLocalBounds().width / 2, playerHitbox.getLocalBounds().height / 2);
@@ -552,12 +554,17 @@ int main()
 			lastlastframe = std::chrono::high_resolution_clock::now();
 			window.clear(sf::Color::Black);
 		
-			window.draw(ceiling);
-			window.draw(floor);
 			window.draw(background);
 			
 			window.draw(player);
-			//window.draw(playerHitbox);
+			
+			if(displayHitboxes)
+			{
+				window.draw(ceiling);
+				window.draw(floor);
+				window.draw(playerHitbox);
+			}
+
 			if(pipes.size() <= 0 && pipesSubroutine)
 			{
 				pipesSubroutine = false;
@@ -565,7 +572,7 @@ int main()
 			}
 			for(int x = 0; x < pipes.size(); x++)
 			{
-				if(pipes[x].intersects(player.getGlobalBounds()))
+				if(pipes[x].intersects(playerHitbox.getGlobalBounds()))
 				{
 					playerIsAlive = false;
 					deadSFX.play();
