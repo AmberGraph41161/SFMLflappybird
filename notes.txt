@@ -25,3 +25,15 @@ as of Monday, October 07, 2024, 15:06:05
 	starting today as of Tuesday, October 08, 2024, 11:52:58
 		end as of Tuesday, October 08, 2024, 12:21:15
 			I have to get to ENG101
+
+	
+	as of Wednesday, October 16, 2024, 14:30:37,
+		you should add:
+			settings menu for:
+				volume control
+				"editing" scores
+				editing controls/keybinds?
+
+			death menu screen that displays your score, coins, and highscores/pastscores
+
+			add coin system. shop, and skins?

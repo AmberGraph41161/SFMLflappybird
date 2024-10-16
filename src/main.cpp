@@ -209,7 +209,7 @@ int main()
 	player.setOrigin(player.getLocalBounds().width / 2, player.getLocalBounds().height / 2);
 	player.setScale(sf::Vector2f(4, 4));
 
-	double playerX = screenWidth / 2;
+	double playerX = screenWidth / 4;
 	double playerY = screenHeight / 2;
 	double playerXvelocity = 0;
 	double playerYvelocity = 0;
@@ -222,9 +222,13 @@ int main()
 	bool startMenu = true;
 	bool pauseMenu = false;
 	bool deathMenu = false;
+	bool settingsMenu = false;
 	int playerScore = 0;
 
+	//player settings...?
 	bool displayHitboxes = false;
+	double sfxVolume = 100;
+	//double musicVolume = 100;
 
 	//player hitbox?
 	sf::RectangleShape playerHitbox(sf::Vector2f(player.getGlobalBounds().width * 0.5, player.getGlobalBounds().height * 0.7));
@@ -328,6 +332,8 @@ int main()
 	playAgainButton.setPosition(screenWidth / 2, screenHeight / 2);
 
 	//load music and sound effects sfx
+	std::vector<sf::Sound*> allSFXvector;
+
 	sf::Sound scoreSFX;
 	sf::SoundBuffer scoreSFXbuffer;
 	if(!scoreSFXbuffer.loadFromFile("resources/score1.wav"))
@@ -336,6 +342,8 @@ int main()
 		exit(EXIT_FAILURE);
 	}
 	scoreSFX.setBuffer(scoreSFXbuffer);
+	scoreSFX.setVolume(sfxVolume);
+	allSFXvector.push_back(&scoreSFX);
 
 	sf::Sound menuSFX;
 	sf::SoundBuffer menuSFXbuffer;
@@ -345,6 +353,9 @@ int main()
 		exit(EXIT_FAILURE);
 	}
 	menuSFX.setBuffer(menuSFXbuffer);
+	menuSFX.setVolume(sfxVolume);
+	allSFXvector.push_back(&menuSFX);
+
 
 	sf::Sound jumpSFX;
 	sf::SoundBuffer jumpSFXbuffer;
@@ -354,6 +365,8 @@ int main()
 		exit(EXIT_FAILURE);
 	}
 	jumpSFX.setBuffer(jumpSFXbuffer);
+	jumpSFX.setVolume(sfxVolume);
+	allSFXvector.push_back(&jumpSFX);
 
 	sf::Sound deadSFX;
 	sf::SoundBuffer deadSFXbuffer;
@@ -363,6 +376,8 @@ int main()
 		exit(EXIT_FAILURE);
 	}
 	deadSFX.setBuffer(deadSFXbuffer);
+	deadSFX.setVolume(sfxVolume);
+	allSFXvector.push_back(&deadSFX);
 
 	//debug FPS font stuff
 	sf::Text fps;
@@ -415,7 +430,7 @@ int main()
 		}
 
 		//startscreen and or pause menu
-		if(startMenu || pauseMenu)
+		if(startMenu)
 		{
 			//draw and deltaTime
 			lastlastframe = std::chrono::high_resolution_clock::now();
@@ -446,7 +461,6 @@ int main()
 						SLEEP(0.1);
 					}
 					startMenu = false;
-					pauseMenu = false;
 					playerIsAlive = true;
 					continue;
 				}
@@ -462,6 +476,73 @@ int main()
 			lastframe = std::chrono::high_resolution_clock::now();
 			deltaTime = lastframe - lastlastframe;
 
+		} else if(pauseMenu || settingsMenu)
+		{
+			while(sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+			{
+
+			}
+			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+			{
+				pauseMenu = false;
+				settingsMenu = false;
+				while(sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+				{
+
+				}
+			}
+		} else if(deathMenu)
+		{
+			animatePlayAgainButtonDuration += deltaTime;
+
+			lastlastframe = std::chrono::high_resolution_clock::now();
+			window.clear(sf::Color::Black);
+			
+			window.draw(background);
+			
+			if(playAgainButton.getGlobalBounds().contains(sf::Vector2f(window.mapPixelToCoords(sf::Mouse::getPosition(window), view)))) //view is in coords, without view is in pixels
+			{
+				playAgainButton.setTextureRect(spriteSheetFrame(playAgainButtonFrameWidth, playAgainButtonFrameHeight, 2));
+
+				if(!playAgainButtonHoveredOver)
+				{
+					menuSFX.play();
+				}
+				playAgainButtonHoveredOver = true;
+
+				if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
+				{
+					menuSFX.play();
+					for(int x = 0 + 2; x < 8 + 2; x++)
+					{
+						playAgainButton.setTextureRect(spriteSheetFrame(playAgainButtonFrameWidth, playAgainButtonFrameHeight, 3 + (x % 2)));
+						window.clear(sf::Color::Black);
+						window.draw(background);
+						window.draw(playAgainButton);
+						window.display();
+						SLEEP(0.1);
+					}
+					deathMenu = false;
+					continue;
+				}
+			} else
+			{
+				playAgainButtonHoveredOver = false;
+				if(animatePlayAgainButtonDuration.count() >= animatePlayAgainButtonDurationThreshold * 2)
+				{
+					playAgainButton.setTextureRect(spriteSheetFrame(playAgainButtonFrameWidth, playAgainButtonFrameHeight, 0));
+					animatePlayAgainButtonDuration = std::chrono::seconds::zero();
+				} else if(animatePlayAgainButtonDuration.count() >= animatePlayAgainButtonDurationThreshold)
+				{
+					playAgainButton.setTextureRect(spriteSheetFrame(playAgainButtonFrameWidth, playAgainButtonFrameHeight, 1));
+				}
+			}
+
+			window.draw(playAgainButton);
+
+			window.display();
+			lastframe = std::chrono::high_resolution_clock::now();
+			deltaTime = lastframe - lastlastframe;
 		} else if(playerIsAlive && !deathMenu)//the game (maybe this is a bad idea...?)
 		{
 			//debug controls
@@ -671,58 +752,6 @@ int main()
 				playerIsAlive = true;
 				deathMenu = true;
 			}
-		} else if(deathMenu)
-		{
-			animatePlayAgainButtonDuration += deltaTime;
-
-			lastlastframe = std::chrono::high_resolution_clock::now();
-			window.clear(sf::Color::Black);
-			
-			window.draw(background);
-			
-			if(playAgainButton.getGlobalBounds().contains(sf::Vector2f(window.mapPixelToCoords(sf::Mouse::getPosition(window), view)))) //view is in coords, without view is in pixels
-			{
-				playAgainButton.setTextureRect(spriteSheetFrame(playAgainButtonFrameWidth, playAgainButtonFrameHeight, 2));
-
-				if(!playAgainButtonHoveredOver)
-				{
-					menuSFX.play();
-				}
-				playAgainButtonHoveredOver = true;
-
-				if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
-				{
-					menuSFX.play();
-					for(int x = 0 + 2; x < 8 + 2; x++)
-					{
-						playAgainButton.setTextureRect(spriteSheetFrame(playAgainButtonFrameWidth, playAgainButtonFrameHeight, 3 + (x % 2)));
-						window.clear(sf::Color::Black);
-						window.draw(background);
-						window.draw(playAgainButton);
-						window.display();
-						SLEEP(0.1);
-					}
-					deathMenu = false;
-					continue;
-				}
-			} else
-			{
-				playAgainButtonHoveredOver = false;
-				if(animatePlayAgainButtonDuration.count() >= animatePlayAgainButtonDurationThreshold * 2)
-				{
-					playAgainButton.setTextureRect(spriteSheetFrame(playAgainButtonFrameWidth, playAgainButtonFrameHeight, 0));
-					animatePlayAgainButtonDuration = std::chrono::seconds::zero();
-				} else if(animatePlayAgainButtonDuration.count() >= animatePlayAgainButtonDurationThreshold)
-				{
-					playAgainButton.setTextureRect(spriteSheetFrame(playAgainButtonFrameWidth, playAgainButtonFrameHeight, 1));
-				}
-			}
-
-			window.draw(playAgainButton);
-
-			window.display();
-			lastframe = std::chrono::high_resolution_clock::now();
-			deltaTime = lastframe - lastlastframe;
 		}
 	}
 
