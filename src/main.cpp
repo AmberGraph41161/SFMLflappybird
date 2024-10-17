@@ -209,14 +209,17 @@ int main()
 	player.setOrigin(player.getLocalBounds().width / 2, player.getLocalBounds().height / 2);
 	player.setScale(sf::Vector2f(4, 4));
 
-	double playerX = screenWidth / 4;
-	double playerY = screenHeight / 2;
+	double defaultPlayerX = screenWidth / 4;
+	double defaultPlayerY = screenHeight / 2;
+	double playerX = defaultPlayerX;
+	double playerY = defaultPlayerY;
 	double playerXvelocity = 0;
 	double playerYvelocity = 0;
 	double gravity = 3000; //1.3
 	double antiGravity = gravity * 0.2; //* 0.1
 	double playerAngle = 0;
 	double playerAngleMultiplier = 0.05;
+	bool playerInitialJump  = false;
 	bool playerJumpedLastTime = false;
 	bool playerIsAlive = true;
 	bool startMenu = true;
@@ -235,6 +238,27 @@ int main()
 	playerHitbox.setOrigin(playerHitbox.getLocalBounds().width / 2, playerHitbox.getLocalBounds().height / 2);
 	playerHitbox.setPosition(playerX, playerY);
 	playerHitbox.setFillColor(sf::Color::Red);
+
+	//player jump indicator
+	sf::Sprite playerJumpIndicator;
+	sf::Texture playerJumpIndicatorTexture;
+	if(!playerJumpIndicatorTexture.loadFromFile("resources/jumpindicator-Sheet.png"))
+	{
+		std::cerr << "failed to load \"resources/jumpindicator-Sheet.png\"" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	const int playerJumpIndicatorFrameWidth = 25;
+	const int playerJumpIndicatorFrameHeight = 37;
+	const double playerJumpIndicatorYoffsetFix = -18;
+
+	playerJumpIndicator.setTexture(playerJumpIndicatorTexture);
+	playerJumpIndicator.setTextureRect(spriteSheetFrame(playerJumpIndicatorFrameWidth, playerJumpIndicatorFrameHeight, 0));
+	playerJumpIndicator.setOrigin(playerJumpIndicator.getLocalBounds().width / 2, playerJumpIndicator.getLocalBounds().height / 2);
+	playerJumpIndicator.setScale(sf::Vector2f(4, 4));
+	playerJumpIndicator.setPosition(playerX, playerY + playerJumpIndicatorYoffsetFix);
+	
+	std::chrono::duration<double> animatePlayerJumpIndicatorDuration = std::chrono::seconds::zero();
+	double animatePlayerJumpIndicatorDurationThreshold = 0.4;
 
 	//load pipe stuff pipes
 	sf::Texture pipeTexture;
@@ -478,19 +502,40 @@ int main()
 
 		} else if(pauseMenu || settingsMenu)
 		{
-			while(sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
-			{
-
-			}
-			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+			if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
 			{
 				pauseMenu = false;
 				settingsMenu = false;
-				while(sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
-				{
-
-				}
 			}
+
+			//draw and deltaTime
+			lastlastframe = std::chrono::high_resolution_clock::now();
+			window.clear(sf::Color::Black);
+		
+			window.draw(background);
+			
+			window.draw(player);
+			
+			for(int x = 0; x < pipes.size(); x++)
+			{
+				window.draw(pipes[x].getTopPipe());
+				window.draw(pipes[x].getBottomPipe());
+			}
+			
+			if(displayHitboxes)
+			{
+				window.draw(ceiling);
+				window.draw(floor);
+				window.draw(playerHitbox);
+			}
+
+			window.draw(scoreText);
+			window.draw(fps);
+			
+			window.display();
+			lastframe = std::chrono::high_resolution_clock::now();
+			deltaTime = lastframe - lastlastframe;
+
 		} else if(deathMenu)
 		{
 			animatePlayAgainButtonDuration += deltaTime;
@@ -523,6 +568,8 @@ int main()
 						SLEEP(0.1);
 					}
 					deathMenu = false;
+					playerIsAlive = true;
+					playerInitialJump = false;
 					continue;
 				}
 			} else
@@ -589,11 +636,12 @@ int main()
 
 			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && !playerJumpedLastTime && playerIsAlive)
 			{
+				playerInitialJump = true;
 				playerJumpedLastTime = true;
 				playerYvelocity = -1 * antiGravity;
 
 				jumpSFX.play();
-			} else if(!playerHitbox.getGlobalBounds().intersects(floor.getGlobalBounds()) && !playerHitbox.getGlobalBounds().intersects(ceiling.getGlobalBounds()))
+			} else if(!playerHitbox.getGlobalBounds().intersects(floor.getGlobalBounds()) && !playerHitbox.getGlobalBounds().intersects(ceiling.getGlobalBounds()) && playerInitialJump)
 			{
 				//move player down due to gravity (falling)
 				playerYvelocity += gravity * deltaTime.count();
@@ -638,6 +686,23 @@ int main()
 			window.draw(background);
 			
 			window.draw(player);
+			if(!playerInitialJump)
+			{
+				animatePlayerJumpIndicatorDuration += deltaTime;
+
+				if(animatePlayerJumpIndicatorDuration.count() >= animatePlayerJumpIndicatorDurationThreshold * 3)
+				{
+					playerJumpIndicator.setTextureRect(spriteSheetFrame(playerJumpIndicatorFrameWidth, playerJumpIndicatorFrameHeight, 0));
+					animatePlayerJumpIndicatorDuration = std::chrono::seconds::zero();
+				}else if(animatePlayerJumpIndicatorDuration.count() >= animatePlayerJumpIndicatorDurationThreshold * 2)
+				{
+					playerJumpIndicator.setTextureRect(spriteSheetFrame(playerJumpIndicatorFrameWidth, playerJumpIndicatorFrameHeight, 2));
+				} else if(animatePlayerJumpIndicatorDuration.count() >= animatePlayerJumpIndicatorDurationThreshold)
+				{
+					playerJumpIndicator.setTextureRect(spriteSheetFrame(playerJumpIndicatorFrameWidth, playerJumpIndicatorFrameHeight, 1));
+				}
+				window.draw(playerJumpIndicator);
+			}
 			
 			if(displayHitboxes)
 			{
@@ -660,7 +725,10 @@ int main()
 					break;
 				}
 
-				pipes[x].move(deltaTime.count());
+				if(playerInitialJump)
+				{
+					pipes[x].move(deltaTime.count());
+				}
 				if(!pipes[x].hasPastPlayer() && pipes[x].isPastPlayer(playerX))
 				{
 					playerScore++;
@@ -738,8 +806,8 @@ int main()
 				playerScore = 0;
 				playerXvelocity = 0;
 				playerYvelocity = 0;
-				playerX = screenWidth / 2;
-				playerY = screenHeight / 2;
+				playerX = defaultPlayerX;
+				playerY = defaultPlayerY;
 
 				playerJumpedLastTime = false;
 
@@ -749,7 +817,6 @@ int main()
 				player.setRotation(playerAngle);
 
 				spawnDefaultRandomPipe(pipes, &pipeTexture, screenWidth, screenHeight);
-				playerIsAlive = true;
 				deathMenu = true;
 			}
 		}
