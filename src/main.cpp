@@ -230,7 +230,7 @@ int main()
 
 	//player settings...?
 	bool displayHitboxes = false;
-	double sfxVolume = 100;
+	double sfxVolume = 50;
 	//double musicVolume = 100;
 
 	//player hitbox?
@@ -354,6 +354,30 @@ int main()
 	playAgainButton.setScale(sf::Vector2f(10, 10));
 	playAgainButton.setOrigin(playAgainButton.getLocalBounds().width / 2, playAgainButton.getLocalBounds().height / 2);
 	playAgainButton.setPosition(screenWidth / 2, screenHeight / 2);
+
+	//dimscreen rectangleshape object for death menu, pause menu, etc, etc
+	int dimScreenShapeDefaultDim = 200;
+	sf::RectangleShape dimScreenShape(sf::Vector2f(screenWidth, screenHeight));
+	dimScreenShape.setFillColor(sf::Color(0, 0, 0, dimScreenShapeDefaultDim));
+	sf::Text dimScreenText;
+	dimScreenText.setFont(scoreTextFont); //note to self as ofThursday, October 17, 2024, 14:14:38 --> make this default font...? change def
+	
+	sf::Sprite quitButton;
+	sf::Texture quitButtonTexture;
+	if(!quitButtonTexture.loadFromFile("resources/quitbutton-Sheet.png"))
+	{
+		std::cerr << "failed to load \"resources/quitbutton-Sheet.png\"" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	const int quitButtonFrameWidth = 29;
+	const int quitButtonFrameHeight = 13;
+	bool quitButtonHoveredOver = false;
+
+	quitButton.setTexture(quitButtonTexture);
+	quitButton.setTextureRect(spriteSheetFrame(quitButtonFrameWidth, quitButtonFrameHeight, 0));
+	quitButton.setScale(sf::Vector2f(10, 10));
+	quitButton.setOrigin(quitButton.getLocalBounds().width / 2, quitButton.getLocalBounds().height / 2);
+	quitButton.setPosition(screenWidth / 2, (screenHeight / 4) * 3);
 
 	//load music and sound effects sfx
 	std::vector<sf::Sound*> allSFXvector;
@@ -502,8 +526,26 @@ int main()
 
 		} else if(pauseMenu || settingsMenu)
 		{
+			if(quitButton.getGlobalBounds().contains(sf::Vector2f(window.mapPixelToCoords(sf::Mouse::getPosition(window), view))))
+			{
+				quitButtonHoveredOver = true;
+				quitButton.setTextureRect(spriteSheetFrame(quitButtonFrameWidth, quitButtonFrameHeight, 1));
+				if(quitButtonHoveredOver)
+				{
+					menuSFX.play();
+				}
+			} else
+			{
+				quitButtonHoveredOver = false;
+				quitButton.setTextureRect(spriteSheetFrame(quitButtonFrameWidth, quitButtonFrameHeight, 0));
+			}
+
 			if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
 			{
+				if(quitButtonHoveredOver)
+				{
+					playerIsAlive = false;
+				}
 				pauseMenu = false;
 				settingsMenu = false;
 			}
@@ -515,6 +557,10 @@ int main()
 			window.draw(background);
 			
 			window.draw(player);
+			if(!playerInitialJump)
+			{
+				window.draw(playerJumpIndicator);
+			}
 			
 			for(int x = 0; x < pipes.size(); x++)
 			{
@@ -532,6 +578,14 @@ int main()
 			window.draw(scoreText);
 			window.draw(fps);
 			
+			window.draw(dimScreenShape);
+			dimScreenText.setString("Left Mouse Button Anywhere To Resume");
+			dimScreenText.setOrigin(dimScreenText.getLocalBounds().width / 2, dimScreenText.getLocalBounds().height / 2);
+			dimScreenText.setPosition(screenWidth / 2, screenHeight / 2);
+			dimScreenText.setCharacterSize(30);
+			window.draw(dimScreenText);
+			window.draw(quitButton);
+
 			window.display();
 			lastframe = std::chrono::high_resolution_clock::now();
 			deltaTime = lastframe - lastlastframe;
