@@ -1,8 +1,10 @@
+#include <iomanip>
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
 #include <chrono>
 #include <fstream>
+#include <vector>
 #include <SFML/Window/Keyboard.hpp>
 #include <SFML/Window/VideoMode.hpp>
 #include <SFML/System/Vector2.hpp>
@@ -168,6 +170,96 @@ private:
 	bool pipeHasPastPlayer = false;
 };
 
+class Missile
+{
+public:
+	Missile(sf::Texture* missileTexture, double spawnX, double spawnY, double missileSpeed)
+		: texture(missileTexture), x(spawnX), y(spawnY), speed(missileSpeed)
+	{
+		missile.setTexture(*texture);
+		missile.setTextureRect(spriteSheetFrame(missileFrameWidth, missileFrameHeight, 0));
+		missile.setOrigin(missile.getLocalBounds().width / 2, missile.getLocalBounds().height / 2);
+		missile.setScale(sf::Vector2f(2, 2));
+
+		std::cout << "missile created!" << std::endl;
+	}
+	~Missile()
+	{
+		std::cout << "missile destroyed!" << std::endl;
+	}
+
+	void move(double deltaTime)
+	{
+		animationFrameDeltaTime += std::chrono::duration<double>(deltaTime);
+
+		if(animationFrameDeltaTime.count() >= animationFrameTimeBound)
+		{
+			animationFrameDeltaTime = std::chrono::seconds::zero();
+			animationCurrentFrame++;
+			if(animationCurrentFrame >= animationFrameUpperBound)
+			{
+				animationCurrentFrame = animationFrameLowerbound;
+				spawnAnimationFinished = true;
+			}
+		}
+
+		missile.setTextureRect(spriteSheetFrame(missileFrameWidth, missileFrameHeight, animationCurrentFrame));
+
+		if(spawnAnimationFinished)
+		{
+			xVelocity -= speed * deltaTime;
+			x += xVelocity * deltaTime;
+		} else
+		{
+			yVelocity += missileFallingSpeed * deltaTime;
+			y += yVelocity * deltaTime;
+		}
+
+		missile.setPosition(x, y);
+	}
+
+	bool isOffScreen(double left, double width, double top, double height)
+	{
+		if(x <= left || x >= width)
+		{
+			return true;
+		}
+
+		if(y >= height || y <= top)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	sf::Sprite getMissile()
+	{
+		return missile;
+	}
+
+private:
+	sf::Sprite missile;
+	sf::Texture* texture;
+
+	int missileFrameWidth = 123;
+	int missileFrameHeight = 36;
+
+	//sf::RectangleShape hitbox(sf::Vector2f(1, 1));
+	double x, y;
+	double xVelocity = 0;
+	double yVelocity = 0;
+	double speed = 1000;
+	double missileFallingSpeed = 400;
+
+	bool spawnAnimationFinished = false;
+	int animationCurrentFrame = 0;
+	int animationFrameUpperBound = 15;
+	int animationFrameLowerbound = 12;
+	double animationFrameTimeBound = 0.07; //seconds
+	std::chrono::duration<double> animationFrameDeltaTime = std::chrono::seconds::zero();
+};
+
 void spawnDefaultRandomPipe(std::vector<Pipe> &pipes, sf::Texture *pipeTexture, double screenWidth, double screenHeight)
 {
 	pipes.emplace_back(Pipe(pipeTexture, screenWidth + RANDOM(0, 500), RANDOMDOUBLE((screenHeight / 2) - 200, (screenHeight / 2) + 200), RANDOMDOUBLE(70, 200), RANDOMDOUBLE(300, 700)));
@@ -273,6 +365,17 @@ int main()
 	bool pipesSubroutine = false;
 
 	pipes.emplace_back(Pipe(&pipeTexture, screenWidth - 100, screenHeight / 2, defaultPipeSpacing, defaultPipeSpeed));
+
+	//load missile stuff
+	sf::Texture missileTexture;
+	if(!missileTexture.loadFromFile("resources/missile-Sheet.png"))
+	{
+		std::cerr << "Failed to load \"resources/missile-Sheet.png\"" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	double defaultMissileSpeed = 2000;
+	std::vector<Missile> missiles;
+	missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3, screenHeight / 2, defaultMissileSpeed));
 
 	//load background and flooring stuff
 	sf::Sprite background;
@@ -673,7 +776,8 @@ int main()
 				{
 
 				}
-				pipes.emplace_back(Pipe(&pipeTexture, screenWidth - 100, RANDOMDOUBLE(300, screenHeight - 300), defaultPipeSpacing, defaultPipeSpeed));
+				//pipes.emplace_back(Pipe(&pipeTexture, screenWidth - 100, RANDOMDOUBLE(300, screenHeight - 300), defaultPipeSpacing, defaultPipeSpeed));
+				missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3, screenHeight / 2, defaultMissileSpeed));
 			}
 
 			//pause menu...?
@@ -765,6 +869,7 @@ int main()
 				window.draw(playerHitbox);
 			}
 
+			//update pipes stuff
 			if(pipes.size() <= 0 && pipesSubroutine)
 			{
 				pipesSubroutine = false;
@@ -811,6 +916,20 @@ int main()
 
 				window.draw(pipes[x].getTopPipe());
 				window.draw(pipes[x].getBottomPipe());
+			}
+
+			//update missiles stuff
+			for(int x = 0; x < missiles.size(); x++)
+			{
+				missiles[x].move(deltaTime.count());
+				if(missiles[x].isOffScreen(0 - 200, view.getSize().x + 10000, 0, screenHeight))
+				{
+					missiles.erase(missiles.begin() + x);
+					x--;
+					continue;
+				}
+
+				window.draw(missiles[x].getMissile());
 			}
 
 			window.draw(scoreText);
