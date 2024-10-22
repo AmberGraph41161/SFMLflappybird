@@ -1,4 +1,3 @@
-#include <iomanip>
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
@@ -123,6 +122,26 @@ public:
 		return false;
 	}
 
+	bool isOffScreenLeftRight(double left, double width)
+	{
+		if(x <= left || x >= width)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	bool isOffScreenBottomTop(double top, double height)
+	{
+		if(y <= top || y >= height)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
 	bool isPastPlayer(double playerX)
 	{
 		if(x <= playerX)
@@ -176,6 +195,9 @@ public:
 	Missile(sf::Texture* missileTexture, double spawnX, double spawnY, double missileSpeed)
 		: texture(missileTexture), x(spawnX), y(spawnY), speed(missileSpeed)
 	{
+		spawnAnimationOriginalY = y;
+		y -= spawnAnimationHeightSpacing;
+
 		missile.setTexture(*texture);
 		missile.setTextureRect(spriteSheetFrame(missileFrameWidth, missileFrameHeight, 0));
 		missile.setOrigin(missile.getLocalBounds().width / 2, missile.getLocalBounds().height / 2);
@@ -192,7 +214,7 @@ public:
 	{
 		animationFrameDeltaTime += std::chrono::duration<double>(deltaTime);
 
-		if(animationFrameDeltaTime.count() >= animationFrameTimeBound)
+		if(animationFrameDeltaTime.count() >= animationFrameTimeBound && y >= spawnAnimationOriginalY - (((spawnAnimationHeightSpacing) / 6) * 5))
 		{
 			animationFrameDeltaTime = std::chrono::seconds::zero();
 			animationCurrentFrame++;
@@ -213,6 +235,12 @@ public:
 		{
 			yVelocity += missileFallingSpeed * deltaTime;
 			y += yVelocity * deltaTime;
+
+			if(y >= spawnAnimationOriginalY)
+			{
+				y = spawnAnimationOriginalY;
+				spawnAnimationFinished = true;
+			}
 		}
 
 		missile.setPosition(x, y);
@@ -226,6 +254,26 @@ public:
 		}
 
 		if(y >= height || y <= top)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	bool isOffScreenLeftRight(double left, double width)
+	{
+		if(x <= left || x >= width)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	bool isOffScreenBottomTop(double top, double height)
+	{
+		if(y <= top || y >= height)
 		{
 			return true;
 		}
@@ -250,13 +298,16 @@ private:
 	double xVelocity = 0;
 	double yVelocity = 0;
 	double speed = 1000;
-	double missileFallingSpeed = 400;
+	double missileFallingSpeed = 1000;
 
 	bool spawnAnimationFinished = false;
+	double spawnAnimationHeightSpacing = 700;
+	double spawnAnimationOriginalY;
+
 	int animationCurrentFrame = 0;
 	int animationFrameUpperBound = 15;
 	int animationFrameLowerbound = 12;
-	double animationFrameTimeBound = 0.07; //seconds
+	double animationFrameTimeBound = 0.08; //seconds
 	std::chrono::duration<double> animationFrameDeltaTime = std::chrono::seconds::zero();
 };
 
@@ -373,9 +424,9 @@ int main()
 		std::cerr << "Failed to load \"resources/missile-Sheet.png\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	double defaultMissileSpeed = 2000;
+	double defaultMissileSpeed = 1500;
 	std::vector<Missile> missiles;
-	missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3, screenHeight / 2, defaultMissileSpeed));
+	//missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3, screenHeight / 2, defaultMissileSpeed));
 
 	//load background and flooring stuff
 	sf::Sprite background;
@@ -631,12 +682,13 @@ int main()
 		{
 			if(quitButton.getGlobalBounds().contains(sf::Vector2f(window.mapPixelToCoords(sf::Mouse::getPosition(window), view))))
 			{
-				quitButtonHoveredOver = true;
 				quitButton.setTextureRect(spriteSheetFrame(quitButtonFrameWidth, quitButtonFrameHeight, 1));
-				if(quitButtonHoveredOver)
+
+				if(!quitButtonHoveredOver)
 				{
 					menuSFX.play();
 				}
+				quitButtonHoveredOver = true;
 			} else
 			{
 				quitButtonHoveredOver = false;
@@ -651,6 +703,7 @@ int main()
 				}
 				pauseMenu = false;
 				settingsMenu = false;
+				menuSFX.play();
 			}
 
 			//draw and deltaTime
@@ -670,7 +723,12 @@ int main()
 				window.draw(pipes[x].getTopPipe());
 				window.draw(pipes[x].getBottomPipe());
 			}
-			
+
+			for(int x = 0; x < missiles.size(); x++)
+			{
+				window.draw(missiles[x].getMissile());
+			}
+
 			if(displayHitboxes)
 			{
 				window.draw(ceiling);
@@ -778,6 +836,12 @@ int main()
 				}
 				//pipes.emplace_back(Pipe(&pipeTexture, screenWidth - 100, RANDOMDOUBLE(300, screenHeight - 300), defaultPipeSpacing, defaultPipeSpeed));
 				missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3, screenHeight / 2, defaultMissileSpeed));
+			} else if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
+			{
+				while(sf::Mouse::isButtonPressed(sf::Mouse::Left))
+				{
+					missiles.emplace_back(Missile(&missileTexture, window.mapPixelToCoords(sf::Mouse::getPosition(window), view).x, window.mapPixelToCoords(sf::Mouse::getPosition(window), view).y, defaultMissileSpeed));
+				}
 			}
 
 			//pause menu...?
@@ -901,13 +965,20 @@ int main()
 					{
 						pipeShrinkTunnel(pipes, &pipeTexture, RANDOM(0, 20), screenWidth - 100, screenHeight / 2);
 						pipesSubroutine = true;
+					} else if(RANDOM(0, 1) && !pipesSubroutine)
+					{
+						missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3.5, playerY + RANDOM(-100, 100), defaultMissileSpeed));
+						missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3.5, playerY + RANDOM(-100, 100), defaultMissileSpeed));
+						missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3.5, playerY + RANDOM(-100, 100), defaultMissileSpeed));
+						missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3.5, playerY + RANDOM(-100, 100), defaultMissileSpeed));
+						pipesSubroutine = true;
 					} else if(!pipesSubroutine)
 					{
 						spawnDefaultRandomPipe(pipes, &pipeTexture, screenWidth, screenHeight);
 					}
 				}
 
-				if(pipes[x].isOffScreen(0 - 200, view.getSize().x + 10000, 0, screenHeight))
+				if(pipes[x].isOffScreenLeftRight(0 - 200, view.getSize().x + 1000))
 				{
 					pipes.erase(pipes.begin() + x);
 					x--;
@@ -921,8 +992,15 @@ int main()
 			//update missiles stuff
 			for(int x = 0; x < missiles.size(); x++)
 			{
+				if(missiles[x].getMissile().getGlobalBounds().intersects(playerHitbox.getGlobalBounds()))
+				{
+					playerIsAlive = false;
+					deadSFX.play();
+					break;
+				}
+
 				missiles[x].move(deltaTime.count());
-				if(missiles[x].isOffScreen(0 - 200, view.getSize().x + 10000, 0, screenHeight))
+				if(missiles[x].isOffScreenLeftRight(0 - 200, view.getSize().x + 1000))
 				{
 					missiles.erase(missiles.begin() + x);
 					x--;
@@ -963,6 +1041,11 @@ int main()
 				window.draw(pipes[x].getTopPipe());
 				window.draw(pipes[x].getBottomPipe());
 			}
+			for(int x = 0; x < missiles.size(); x++)
+			{
+				window.draw(missiles[x].getMissile());
+			}
+
 			window.draw(player);
 
 			window.draw(scoreText);
@@ -975,6 +1058,7 @@ int main()
 			if(player.getPosition().y >= screenHeight)
 			{
 				pipes.clear();
+				missiles.clear();
 
 				playerScore = 0;
 				playerXvelocity = 0;
