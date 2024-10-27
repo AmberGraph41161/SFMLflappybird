@@ -56,7 +56,12 @@ int main()
 	bool pauseMenu = false;
 	bool deathMenu = false;
 	bool settingsMenu = false;
-	int playerScore = 0;
+	
+	int playerCurrentScore = 0; //(current score, during live gameplay and not saved score(s))
+	
+	std::map<std::string, int> playerScores;
+	getSavedScores(playerScores);
+	std::string playerName = getSavedPlayerName();
 
 	//player settings...?
 	bool displayHitboxes = false;
@@ -145,7 +150,7 @@ int main()
 	scoreText.setFont(scoreTextFont);
 	scoreText.setCharacterSize(50);
 	//scoreText.setScale(sf::Vector2f(2, 2));
-	scoreText.setString(std::to_string(playerScore));
+	scoreText.setString(std::to_string(playerCurrentScore));
 	scoreText.setOrigin(scoreText.getLocalBounds().width / 2, scoreText.getLocalBounds().height / 2);
 	scoreText.setPosition(screenWidth / 2, screenHeight * 0.2);
 
@@ -446,6 +451,23 @@ int main()
 			window.clear(sf::Color::Black);
 			
 			window.draw(background);
+
+			//TEMPORARY
+			/*
+			sf::Text highscores;
+			highscores.setFont(scoreTextFont);
+			std::string highscoresAppendString = "";
+			for(std::map<int, std::string>::iterator it = savedPlayerScores.end(); it != savedPlayerScores.begin(); --it)
+			{
+				highscoresAppendString = it->second + " " + std::to_string(it->first) + '\n';
+				std::cout << it->second << " " << it->first << std::endl;
+			}
+			highscores.setString(highscoresAppendString);
+			highscores.setCharacterSize(24);
+			highscores.setOrigin(highscores.getLocalBounds().width / 2, highscores.getLocalBounds().height / 2);
+			highscores.setPosition(screenWidth / 2, (screenHeight / 4) * 1);
+			window.draw(highscores);
+			*/
 			
 			if(playAgainButton.getGlobalBounds().contains(sf::Vector2f(window.mapPixelToCoords(sf::Mouse::getPosition(window), view)))) //view is in coords, without view is in pixels
 			{
@@ -641,8 +663,8 @@ int main()
 				}
 				if(!pipes[x].hasPastPlayer() && pipes[x].isPastPlayer(playerX))
 				{
-					playerScore++;
-					scoreText.setString(std::to_string(playerScore));
+					playerCurrentScore++;
+					scoreText.setString(std::to_string(playerCurrentScore));
 					scoreSFX.play();
 					if(RANDOM(0, 10) == 5 && !pipesSubroutine)
 					{
@@ -744,10 +766,16 @@ int main()
 
 			if(player.getPosition().y >= screenHeight)
 			{
+				if(playerScores[playerName] < playerCurrentScore)
+				{
+					playerScores[playerName] = playerCurrentScore;
+					saveScores(playerScores);
+				}
+
 				pipes.clear();
 				missiles.clear();
 
-				playerScore = 0;
+				playerCurrentScore = 0;
 				playerXvelocity = 0;
 				playerYvelocity = 0;
 				playerX = defaultPlayerX;
@@ -765,6 +793,7 @@ int main()
 			}
 		}
 	}
+	saveScores(playerScores);
 
 	std::cout << "[done!]" << std::endl;
 	return 0;
