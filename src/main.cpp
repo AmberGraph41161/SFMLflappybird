@@ -452,23 +452,6 @@ int main()
 			
 			window.draw(background);
 
-			//TEMPORARY
-			/*
-			sf::Text highscores;
-			highscores.setFont(scoreTextFont);
-			std::string highscoresAppendString = "";
-			for(std::map<int, std::string>::iterator it = savedPlayerScores.end(); it != savedPlayerScores.begin(); --it)
-			{
-				highscoresAppendString = it->second + " " + std::to_string(it->first) + '\n';
-				std::cout << it->second << " " << it->first << std::endl;
-			}
-			highscores.setString(highscoresAppendString);
-			highscores.setCharacterSize(24);
-			highscores.setOrigin(highscores.getLocalBounds().width / 2, highscores.getLocalBounds().height / 2);
-			highscores.setPosition(screenWidth / 2, (screenHeight / 4) * 1);
-			window.draw(highscores);
-			*/
-			
 			if(playAgainButton.getGlobalBounds().contains(sf::Vector2f(window.mapPixelToCoords(sf::Mouse::getPosition(window), view)))) //view is in coords, without view is in pixels
 			{
 				playAgainButton.setTextureRect(spriteSheetFrame(playAgainButtonFrameWidth, playAgainButtonFrameHeight, 2));
