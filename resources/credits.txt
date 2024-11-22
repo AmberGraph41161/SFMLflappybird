@@ -3,6 +3,8 @@ found pipe and flappybird texture over at: "https://github.com/thomasfinch/Flapp
 
 used textures I found from credit above to make my own sprites of flappybird and pipes assets in aseprite, confirmed as of Thursday, October 10, 2024, 14:35:31
 
+all sfx were made in SFXR-qt by me
+
 minecraft font:
 	found on the website:
 		"https://www.dafont.com/bitmap.php"

@@ -30,9 +30,10 @@ int main()
 	//load player stuff
 	sf::Sprite player;
 	sf::Texture playerTexture;
-	if(!playerTexture.loadFromFile("resources/flappybird.png"))
+	std::string playerTexturePath = "resources/textures/flappybird.png";
+	if(!playerTexture.loadFromFile(playerTexturePath))
 	{
-		std::cerr << "failed to load \"resources/flappybird.png\"" << std::endl;
+		std::cerr << "failed to load \"" << playerTexturePath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	player.setTexture(playerTexture);
@@ -77,9 +78,10 @@ int main()
 	//player jump indicator
 	sf::Sprite playerJumpIndicator;
 	sf::Texture playerJumpIndicatorTexture;
-	if(!playerJumpIndicatorTexture.loadFromFile("resources/jumpindicator-Sheet.png"))
+	std::string playerJumpIndicatorTexturePath = "resources/textures/jumpindicator-Sheet.png";
+	if(!playerJumpIndicatorTexture.loadFromFile(playerJumpIndicatorTexturePath))
 	{
-		std::cerr << "failed to load \"resources/jumpindicator-Sheet.png\"" << std::endl;
+		std::cerr << "failed to load \"" << playerJumpIndicatorTexturePath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	const int playerJumpIndicatorFrameWidth = 25;
@@ -97,9 +99,10 @@ int main()
 
 	//load pipe stuff pipes
 	sf::Texture pipeTexture;
-	if(!pipeTexture.loadFromFile("resources/longpipe.png"))
+	std::string pipeTexturePath = "resources/textures/longpipe.png";
+	if(!pipeTexture.loadFromFile(pipeTexturePath))
 	{
-		std::cerr << "failed to load \"resources/longpipe.png\"" << std::endl;
+		std::cerr << "failed to load \"" << pipeTexturePath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	std::vector<Pipe> pipes;
@@ -111,9 +114,10 @@ int main()
 
 	//load missile stuff
 	sf::Texture missileTexture;
-	if(!missileTexture.loadFromFile("resources/missile-Sheet.png"))
+	std::string missileTexturePath = "resources/textures/missile-Sheet.png";
+	if(!missileTexture.loadFromFile(missileTexturePath))
 	{
-		std::cerr << "Failed to load \"resources/missile-Sheet.png\"" << std::endl;
+		std::cerr << "Failed to load \"" << missileTexturePath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	double defaultMissileSpeed = 1500;
@@ -123,9 +127,10 @@ int main()
 	//load background and flooring stuff
 	sf::Sprite background;
 	sf::Texture backgroundTexture;
-	if(!backgroundTexture.loadFromFile("resources/slicebackground.png"))
+	std::string backgroundTexturePath = "resources/textures/slicebackground.png";
+	if(!backgroundTexture.loadFromFile(backgroundTexturePath))
 	{
-		std::cerr << "failed to load \"resources/slicebackground.png\"" << std::endl;
+		std::cerr << "failed to load \"" << backgroundTexturePath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	int backgroundTextureMultiplier = 8;
@@ -142,9 +147,10 @@ int main()
 	//score
 	sf::Text scoreText;
 	sf::Font scoreTextFont;
-	if(!scoreTextFont.loadFromFile("resources/Minecraftia-Regular.ttf"))
+	std::string scoreTextFontPath = "resources/fonts/Minecraftia-Regular.ttf";
+	if(!scoreTextFont.loadFromFile(scoreTextFontPath))
 	{
-		std::cout << "failed to load\"resources/Minecraftia-Regular.ttf\"" << std::endl;
+		std::cout << "failed to load\"" << scoreTextFontPath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	scoreText.setFont(scoreTextFont);
@@ -166,9 +172,10 @@ int main()
 	//start menu
 	sf::Sprite startButton;
 	sf::Texture startButtonTexture;
-	if(!startButtonTexture.loadFromFile("resources/startbutton-Sheet.png"))
+	std::string startButtonTexturePath = "resources/textures/startbutton-Sheet.png";
+	if(!startButtonTexture.loadFromFile(startButtonTexturePath))
 	{
-		std::cerr << "failed to load \"resources/startbutton-Sheet.png\"" << std::endl;
+		std::cerr << "failed to load \"" << startButtonTexturePath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	const int startButtonFrameWidth = 33;
@@ -184,9 +191,10 @@ int main()
 	//death menu & high score screen
 	sf::Sprite playAgainButton;
 	sf::Texture playAgainButtonTexture;
-	if(!playAgainButtonTexture.loadFromFile("resources/playagainbutton-Sheet.png"))
+	std::string playAgainButtonTexturePath = "resources/textures/playagainbutton-Sheet.png";
+	if(!playAgainButtonTexture.loadFromFile(playAgainButtonTexturePath))
 	{
-		std::cerr << "failed to load \"resources/playagainbutton-Sheet.png\"" << std::endl;
+		std::cerr << "failed to load \"" << playAgainButtonTexturePath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	const int playAgainButtonFrameWidth = 68;
@@ -210,9 +218,10 @@ int main()
 	
 	sf::Sprite quitButton;
 	sf::Texture quitButtonTexture;
-	if(!quitButtonTexture.loadFromFile("resources/quitbutton-Sheet.png"))
+	std::string quitButtonTexturePath = "resources/textures/quitbutton-Sheet.png";
+	if(!quitButtonTexture.loadFromFile(quitButtonTexturePath))
 	{
-		std::cerr << "failed to load \"resources/quitbutton-Sheet.png\"" << std::endl;
+		std::cerr << "failed to load \"" << quitButtonTexturePath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	const int quitButtonFrameWidth = 29;
@@ -230,9 +239,10 @@ int main()
 
 	sf::Sound scoreSFX;
 	sf::SoundBuffer scoreSFXbuffer;
-	if(!scoreSFXbuffer.loadFromFile("resources/score1.wav"))
+	std::string scoreSFXbufferPath = "resources/sounds/score1.wav";
+	if(!scoreSFXbuffer.loadFromFile(scoreSFXbufferPath))
 	{
-		std::cerr << "failed to load \"resources/score1.wav\"" << std::endl;
+		std::cerr << "failed to load \"" << scoreSFXbufferPath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	scoreSFX.setBuffer(scoreSFXbuffer);
@@ -241,9 +251,10 @@ int main()
 
 	sf::Sound menuSFX;
 	sf::SoundBuffer menuSFXbuffer;
-	if(!menuSFXbuffer.loadFromFile("resources/menu0.wav"))
+	std::string menuSFXbufferPath = "resources/sounds/menu0.wav";
+	if(!menuSFXbuffer.loadFromFile(menuSFXbufferPath))
 	{
-		std::cerr << "failed to load \"resources/menu0.wav\"" << std::endl;
+		std::cerr << "failed to load \"" << menuSFXbufferPath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	menuSFX.setBuffer(menuSFXbuffer);
@@ -253,9 +264,10 @@ int main()
 
 	sf::Sound jumpSFX;
 	sf::SoundBuffer jumpSFXbuffer;
-	if(!jumpSFXbuffer.loadFromFile("resources/jump0.wav"))
+	std::string jumpSFXbufferPath = "resources/sounds/jump0.wav";
+	if(!jumpSFXbuffer.loadFromFile(jumpSFXbufferPath))
 	{
-		std::cerr << "failed to load \"resources/jump0.wav\"" << std::endl;
+		std::cerr << "failed to load \"" << jumpSFXbufferPath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	jumpSFX.setBuffer(jumpSFXbuffer);
@@ -264,9 +276,10 @@ int main()
 
 	sf::Sound deadSFX;
 	sf::SoundBuffer deadSFXbuffer;
-	if(!deadSFXbuffer.loadFromFile("resources/dead0.wav"))
+	std::string deadSFXbufferPath = "resources/sounds/dead0.wav";
+	if(!deadSFXbuffer.loadFromFile(deadSFXbufferPath))
 	{
-		std::cerr << "failed to load \"resources/dead0.wav\"" << std::endl;
+		std::cerr << "failed to load \"" << deadSFXbufferPath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	deadSFX.setBuffer(deadSFXbuffer);
