@@ -10,9 +10,13 @@
 
 ### Resources
 
-all of the art I drew by hand in aseprite
+ART
 
-all sound effects were done by me in SFXR
+> all art done by me, drawn by hand in aseprite
+
+SOUNDS/SFX
+
+> all sfx done by me in SFXR
 
 ### Controls
 | keyboard button | action |
@@ -30,7 +34,7 @@ dependencies:
 
 > clang++ (provided Makefile uses clang++. You can probably edit the makefile if wanted)
 
-### *My distro's repos DON'T have SFML:*
+### My distro's repos *DON'T* have SFML:
 
 1. clone the git repo and cd into it
 ```shell
@@ -62,7 +66,7 @@ mv SFMLflappybird ../ && cd ..
 ./SFMLflappybird
 ```
 
-### *My distro's repos DO have SFML:*
+### My distro's repos *DO* have SFML:
 
 1. if your distro's repos have SFML, install SFML dependency with package manger.
 on arch linux (and any other arch-based distro), do:
@@ -88,7 +92,7 @@ make
 ## Windows
 broken as of Friday, November 22, 2024, 18:10:56
 
-## MacOS (OSx)
+## MacOS (OS X)
 not tested as of Friday, November 22, 2024, 18:11:25
 
 # Please view only
