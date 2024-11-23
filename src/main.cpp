@@ -287,6 +287,7 @@ int main()
 	allSFXvector.push_back(&deadSFX);
 
 	//debug FPS font stuff
+	bool drawFPS = false;
 	sf::Text fps;
 	fps.setFont(scoreTextFont);
 	fps.setPosition(10, 100);
@@ -442,7 +443,10 @@ int main()
 			}
 
 			window.draw(scoreText);
-			window.draw(fps);
+			if(drawFPS)
+			{
+				window.draw(fps);
+			}
 			
 			window.draw(dimScreenShape);
 			dimScreenText.setString("Left Mouse Button Anywhere To Resume");
@@ -716,7 +720,10 @@ int main()
 			}
 
 			window.draw(scoreText);
-			window.draw(fps);
+			if(drawFPS)
+			{
+				window.draw(fps);
+			}
 			
 			window.display();
 			lastframe = std::chrono::high_resolution_clock::now();
@@ -754,7 +761,10 @@ int main()
 			window.draw(player);
 
 			window.draw(scoreText);
-			window.draw(fps);
+			if(drawFPS)
+			{
+				window.draw(fps);
+			}
 			
 			window.display();
 			lastframe = std::chrono::high_resolution_clock::now();
