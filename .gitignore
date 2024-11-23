@@ -8,4 +8,6 @@ resources/lol/
 build/
 
 pandoc/
+md/forlater
+README.html
 notes.txt
