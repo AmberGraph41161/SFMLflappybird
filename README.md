@@ -8,27 +8,29 @@
 
 ![splashbargif](md/splashbar.gif)
 
-## Resources
+### Resources
+
 all of the art I drew by hand in aseprite
+
 all sound effects were done by me in SFXR
 
-## Controls
+### Controls
 | keyboard button | action |
 | --- | --- |
 | q | quit |
 | SPACE | jump |
 | ESCAPE | pause |
 
-# Installation
+# INSTALLATION
 
-## LINUX
+## Linux
 
 dependencies:
 > sfml >= 2.6.1
 
 > clang++ (provided Makefile uses clang++. You can probably edit the makefile if wanted)
 
-### My distro's repos DON'T have SFML:
+### *My distro's repos DON'T have SFML:*
 
 1. clone the git repo and cd into it
 ```shell
@@ -60,9 +62,9 @@ mv SFMLflappybird ../ && cd ..
 ./SFMLflappybird
 ```
 
-### My distro's repos DO have SFML:
+### *My distro's repos DO have SFML:*
 
-1. if your distro's repos have SFML, install with SFML dependency with package manger.
+1. if your distro's repos have SFML, install SFML dependency with package manger.
 on arch linux (and any other arch-based distro), do:
 ```shell
 sudo pacman -S sfml
@@ -83,7 +85,7 @@ make
 ./main
 ```
 
-## WINDOWS
+## Windows
 broken as of Friday, November 22, 2024, 18:10:56
 
 ## MacOS (OSx)
