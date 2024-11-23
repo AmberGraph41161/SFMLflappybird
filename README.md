@@ -2,42 +2,92 @@
 
 > a flappybird clone made with SFML, with some "adjustments" to make it more fun and interesting
 
-> all of the art I drew by hand in aseprite
-> sound effects were done with SFXR
+![splashbargif](md/splashbar.gif)
 
-# installation
+![gameplaygif](md/gameplay.gif)
 
-1. clone this repo
+![splashbargif](md/splashbar.gif)
+
+## Resources
+all of the art I drew by hand in aseprite
+all sound effects were done by me in SFXR
+
+## Controls
+| keyboard button | action |
+| --- | --- |
+| q | quit |
+| SPACE | jump |
+| ESCAPE | pause |
+
+# Installation
+
+## LINUX
+
+dependencies:
+> sfml >= 2.6.1
+
+> clang++ (provided Makefile uses clang++. You can probably edit the makefile if wanted)
+
+### My distro's repos DON'T have SFML:
+
+1. clone the git repo and cd into it
 ```shell
-git clone https://github.com/AmberGraph41161/SFMLflappybird
+git clone https://github.com/AmberGraph41161/SFMLflappybird && cd SFMLflappybird
 ```
 
-2. cd into repo
+2. make a build directory and cd into it
 ```shell
-cd SFMLflappybird
+mkdir build && cd build
 ```
 
-3. make build directory, cd into build directory, build Makefile
+3. run cmake (this *should* automatically download SFML for you)
 ```shell
-mkdir build
-cd build
 cmake ..
 ```
 
-4. run cmake-generated Makefile
+4. run cmake-generated makefile
 ```shell
 make
 ```
 
-5. move new binary "SFMLflappybird" up one directory in order for it to correctly find resources
+5. move new binary to parent folder to resolve resource finding (binary and "resources/" must be in the same directory)
 ```shell
-mv SFMLflappybird ../
+mv SFMLflappybird ../ && cd ..
 ```
 
-6. run and play the project!
+6. run and play SFMLflappybird!
 ```shell
 ./SFMLflappybird
 ```
+
+### My distro's repos DO have SFML:
+
+1. if your distro's repos have SFML, install with SFML dependency with package manger.
+on arch linux (and any other arch-based distro), do:
+```shell
+sudo pacman -S sfml
+```
+
+2. clone the git repo and cd into it
+```shell
+git clone https://github.com/AmberGraph41161/SFMLflappybird && cd SFMLflappybird
+```
+
+3. run the provided makefile
+```shell
+make
+```
+
+4. run the output binary and enjoy SFMLflappybird!
+```shell
+./main
+```
+
+## WINDOWS
+broken as of Friday, November 22, 2024, 18:10:56
+
+## MacOS (OSx)
+not tested as of Friday, November 22, 2024, 18:11:25
 
 # Please view only
 
