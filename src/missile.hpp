@@ -2,18 +2,21 @@
 #define MISSILE_HPP
 
 #include <chrono>
+#include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
 
 class Missile
 {
 public:
-	Missile(sf::Texture* missileTexture, double spawnX, double spawnY, double missileSpeed);
+	Missile(sf::Texture* missileTexture, double spawnX, double spawnY, double missileSpeed, sf::Sound *droppingSFX, sf::Sound *launchingSFX);
 	~Missile();
 	void move(double deltaTime);
 	bool isOffScreen(double left, double width, double top, double height);
 	bool isOffScreenLeftRight(double left, double width);
 	bool isOffScreenBottomTop(double top, double height);
 	sf::Sprite getMissile();
+
+	bool isSpawnAnimationFinished();
 
 private:
 	sf::Sprite missile;
@@ -38,6 +41,12 @@ private:
 	int animationFrameLowerbound = 12;
 	double animationFrameTimeBound = 0.08; //seconds
 	std::chrono::duration<double> animationFrameDeltaTime = std::chrono::seconds::zero();
+
+	sf::Sound *droppingSFX;
+	sf::Sound *launchingSFX;
+
+	bool droppingSFXwasPlayed = false;
+	bool launchingSFXwasPlayed = false;
 };
 
 #endif

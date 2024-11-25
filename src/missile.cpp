@@ -1,13 +1,12 @@
 #include "missile.hpp"
 
-#include <iostream>
 #include <chrono>
 #include <SFML/Graphics.hpp>
 
 #include "gamefunctions.hpp"
 
-Missile::Missile(sf::Texture* missileTexture, double spawnX, double spawnY, double missileSpeed)
-	: texture(missileTexture), x(spawnX), y(spawnY), speed(missileSpeed)
+Missile::Missile(sf::Texture* missileTexture, double spawnX, double spawnY, double missileSpeed, sf::Sound *droppingSFX, sf::Sound *launchingSFX)
+	: texture(missileTexture), x(spawnX), y(spawnY), speed(missileSpeed), droppingSFX(droppingSFX), launchingSFX(launchingSFX)
 {
 	spawnAnimationOriginalY = y;
 	y -= spawnAnimationHeightSpacing;
@@ -17,15 +16,25 @@ Missile::Missile(sf::Texture* missileTexture, double spawnX, double spawnY, doub
 	missile.setOrigin(missile.getLocalBounds().width / 2, missile.getLocalBounds().height / 2);
 	missile.setScale(sf::Vector2f(2, 2));
 
-	std::cout << "missile created!" << std::endl;
 }
+
 Missile::~Missile()
 {
-	std::cout << "missile destroyed!" << std::endl;
 }
 
 void Missile::move(double deltaTime)
 {
+	if(!droppingSFXwasPlayed)
+	{
+		droppingSFX->play();
+		droppingSFXwasPlayed = true;
+	}
+	if(!launchingSFXwasPlayed && spawnAnimationFinished)
+	{
+		launchingSFX->play();
+		launchingSFXwasPlayed = true;
+	}
+
 	animationFrameDeltaTime += std::chrono::duration<double>(deltaTime);
 
 	if(animationFrameDeltaTime.count() >= animationFrameTimeBound && y >= spawnAnimationOriginalY - (((spawnAnimationHeightSpacing) / 6) * 5))
@@ -98,4 +107,10 @@ bool Missile::isOffScreenBottomTop(double top, double height)
 sf::Sprite Missile::getMissile()
 {
 	return missile;
+}
+
+
+bool Missile::isSpawnAnimationFinished()
+{
+	return spawnAnimationFinished;
 }

@@ -286,6 +286,30 @@ int main()
 	deadSFX.setVolume(sfxVolume);
 	allSFXvector.push_back(&deadSFX);
 
+	sf::Sound missileDroppingSFX;
+	sf::SoundBuffer missileDroppingSFXbuffer;
+	std::string missileDroppingSFXbufferPath = "resources/sounds/missiledropping0.wav";
+	if(!missileDroppingSFXbuffer.loadFromFile(missileDroppingSFXbufferPath))
+	{
+		std::cerr << "failed to load \"" << missileDroppingSFXbufferPath << "\"" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	missileDroppingSFX.setBuffer(missileDroppingSFXbuffer);
+	missileDroppingSFX.setVolume(sfxVolume);
+	allSFXvector.push_back(&missileDroppingSFX);
+	
+	sf::Sound missileLaunchingSFX;
+	sf::SoundBuffer missileLaunchingSFXbuffer;
+	std::string missileLaunchingSFXbufferPath = "resources/sounds/missilelaunching0.wav";
+	if(!missileLaunchingSFXbuffer.loadFromFile(missileLaunchingSFXbufferPath))
+	{
+		std::cerr << "failed to load \"" << missileLaunchingSFXbufferPath << "\"" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	missileLaunchingSFX.setBuffer(missileLaunchingSFXbuffer);
+	missileLaunchingSFX.setVolume(sfxVolume);
+	allSFXvector.push_back(&missileLaunchingSFX);
+
 	//debug FPS font stuff
 	bool drawFPS = false;
 	sf::Text fps;
@@ -544,12 +568,12 @@ int main()
 
 				}
 				//pipes.emplace_back(Pipe(&pipeTexture, screenWidth - 100, RANDOMDOUBLE(300, screenHeight - 300), defaultPipeSpacing, defaultPipeSpeed));
-				missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3, screenHeight / 2, defaultMissileSpeed));
+				missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3, screenHeight / 2, defaultMissileSpeed, &missileDroppingSFX, &missileLaunchingSFX));
 			} else if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
 			{
 				while(sf::Mouse::isButtonPressed(sf::Mouse::Left))
 				{
-					missiles.emplace_back(Missile(&missileTexture, window.mapPixelToCoords(sf::Mouse::getPosition(window), view).x, window.mapPixelToCoords(sf::Mouse::getPosition(window), view).y, defaultMissileSpeed));
+					missiles.emplace_back(Missile(&missileTexture, window.mapPixelToCoords(sf::Mouse::getPosition(window), view).x, window.mapPixelToCoords(sf::Mouse::getPosition(window), view).y, defaultMissileSpeed, &missileDroppingSFX, &missileLaunchingSFX));
 				}
 			}
 
@@ -676,10 +700,14 @@ int main()
 						pipesSubroutine = true;
 					} else if(RANDOM(0, 1) && !pipesSubroutine)
 					{
-						missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3.5, playerY + RANDOM(-100, 100), defaultMissileSpeed));
-						missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3.5, playerY + RANDOM(-100, 100), defaultMissileSpeed));
-						missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3.5, playerY + RANDOM(-100, 100), defaultMissileSpeed));
-						missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3.5, playerY + RANDOM(-100, 100), defaultMissileSpeed));
+						missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3.5, playerY + RANDOM(-100, 100), defaultMissileSpeed, &missileDroppingSFX, &missileLaunchingSFX));
+						missileDroppingSFX.play();
+						missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3.5, playerY + RANDOM(-100, 100), defaultMissileSpeed, &missileDroppingSFX, &missileLaunchingSFX));
+						missileDroppingSFX.play();
+						missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3.5, playerY + RANDOM(-100, 100), defaultMissileSpeed, &missileDroppingSFX, &missileLaunchingSFX));
+						missileDroppingSFX.play();
+						missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3.5, playerY + RANDOM(-100, 100), defaultMissileSpeed, &missileDroppingSFX, &missileLaunchingSFX));
+						missileDroppingSFX.play();
 						pipesSubroutine = true;
 					} else if(!pipesSubroutine)
 					{

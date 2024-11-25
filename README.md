@@ -10,11 +10,11 @@
 
 ### Resources
 
-ART
+***ART***
 
 > all art done by me, drawn by hand in aseprite
 
-SOUNDS/SFX
+***SOUNDS/SFX***
 
 > all sfx done by me in SFXR
 

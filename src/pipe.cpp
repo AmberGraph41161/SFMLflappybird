@@ -1,6 +1,5 @@
 #include "pipe.hpp"
 
-#include <iostream>
 #include <SFML/Graphics.hpp>
 
 #include "gamefunctions.hpp"
@@ -21,11 +20,10 @@ Pipe::Pipe(sf::Texture* pipeTexture, double startX, double startY, double pipeSp
 	topPipe.setPosition(x, y - spacing);
 	bottomPipe.setPosition(x, y + spacing);
 
-	std::cout << "pipe created!" << std::endl;
 }
+
 Pipe::~Pipe()
 {
-	std::cout << "pipe destroyed!" << std::endl;
 }
 
 void Pipe::move(double deltaTime)
