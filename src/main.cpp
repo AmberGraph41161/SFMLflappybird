@@ -139,7 +139,7 @@ int main()
 	background.setTexture(backgroundTexture);
 	background.setScale(sf::Vector2f(7.5, 7.5));
 	background.setOrigin(background.getLocalBounds().width / 2, background.getLocalBounds().height / 2);
-	background.setPosition(static_cast<double>(screenWidth) / 2, static_cast<double>(screenHeight) / 2);
+	background.setPosition(screenWidth / 2, screenHeight / 2);
 	double backgroundOriginalX = background.getPosition().x;
 	double backgroundOriginalY = background.getPosition().y;
 	double backgroundSpeed = 50;
@@ -181,12 +181,40 @@ int main()
 	const int startButtonFrameWidth = 33;
 	const int startButtonFrameHeight = 13;
 	bool startButtonHoveredOver = false;
+	bool startButtonClicked = false;
+	int startButtonFlashAnimationCount = 0;
+	const int startButtonFlashAnimationCountThreshold = 10;
+	std::chrono::duration<double> startButtonFlashAnimationTickDelta = std::chrono::seconds::zero();
+	double startButtonFlashAnimationTickDeltaThreshold = 0.08;
 
 	startButton.setTexture(startButtonTexture);
 	startButton.setTextureRect(sf::IntRect(0, 0, startButtonFrameWidth, startButtonFrameHeight));
 	startButton.setScale(sf::Vector2f(10, 10));
 	startButton.setOrigin(startButton.getLocalBounds().width / 2, startButton.getLocalBounds().height / 2);
-	startButton.setPosition(screenWidth / 2, screenHeight / 2);
+	startButton.setPosition(screenWidth / 2, (screenHeight / 5) * 2);
+
+	sf::Sprite viewHighscoresButton;
+	sf::Texture viewHighscoresButtonTexture;
+	std::string viewHighscoresButtonTexturePath = "resources/textures/viewhighscoresbutton-Sheet.png";
+	if(!viewHighscoresButtonTexture.loadFromFile(viewHighscoresButtonTexturePath))
+	{
+		std::cerr << "failed to load \"" << viewHighscoresButtonTexturePath << "\"" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	const int viewHighscoresButtonFrameWidth = 93;
+	const int viewHighscoresButtonFrameHeight = 13;
+	bool viewHighscoresButtonHoveredOver = false;
+	bool viewHighscoresButtonClicked = false;
+	int viewHighscoresButtonFlashAnimationCount = 0;
+	const int viewHighscoresButtonFlashAnimationCountThreshold = 10;
+	std::chrono::duration<double> viewHighscoresButtonFlashAnimationTickDelta = std::chrono::seconds::zero();
+	double viewHighscoresButtonFlashAnimationTickDeltaThreshold = 0.08;
+
+	viewHighscoresButton.setTexture(viewHighscoresButtonTexture);
+	viewHighscoresButton.setTextureRect(sf::IntRect(0, 0, viewHighscoresButtonFrameWidth, viewHighscoresButtonFrameHeight));
+	viewHighscoresButton.setScale(sf::Vector2f(10, 10));
+	viewHighscoresButton.setOrigin(viewHighscoresButton.getLocalBounds().width / 2, viewHighscoresButton.getLocalBounds().height / 2);
+	viewHighscoresButton.setPosition(screenWidth / 2, (screenHeight / 5) * 3);
 
 	//death menu & high score screen
 	sf::Sprite playAgainButton;
@@ -200,8 +228,8 @@ int main()
 	const int playAgainButtonFrameWidth = 68;
 	const int playAgainButtonFrameHeight = 13;
 	bool playAgainButtonHoveredOver = false;
-	std::chrono::duration<double> animatePlayAgainButtonDuration = std::chrono::seconds::zero();
-	double animatePlayAgainButtonDurationThreshold = 0.4;
+	std::chrono::duration<double> playAgainButtonIdleAnimationTickDelta = std::chrono::seconds::zero();
+	double playAgainButtonIdleAnimationTickDeltaThreshold = 0.6;
 
 	playAgainButton.setTexture(playAgainButtonTexture);
 	playAgainButton.setTextureRect(sf::IntRect(0, 0, playAgainButtonFrameWidth, playAgainButtonFrameHeight));
@@ -235,6 +263,7 @@ int main()
 	quitButton.setPosition(screenWidth / 2, (screenHeight / 4) * 3);
 
 	//load music and sound effects sfx
+	float masterVolume = 40;
 	std::vector<sf::Sound*> allSFXvector;
 
 	sf::Sound scoreSFX;
@@ -249,18 +278,29 @@ int main()
 	scoreSFX.setVolume(sfxVolume);
 	allSFXvector.push_back(&scoreSFX);
 
-	sf::Sound menuSFX;
-	sf::SoundBuffer menuSFXbuffer;
-	std::string menuSFXbufferPath = "resources/sounds/menu0.wav";
-	if(!menuSFXbuffer.loadFromFile(menuSFXbufferPath))
+	sf::Sound menu0SFX;
+	sf::SoundBuffer menu0SFXbuffer;
+	std::string menu0SFXbufferPath = "resources/sounds/menu3.wav";
+	if(!menu0SFXbuffer.loadFromFile(menu0SFXbufferPath))
 	{
-		std::cerr << "failed to load \"" << menuSFXbufferPath << "\"" << std::endl;
+		std::cerr << "failed to load \"" << menu0SFXbufferPath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	menuSFX.setBuffer(menuSFXbuffer);
-	menuSFX.setVolume(sfxVolume);
-	allSFXvector.push_back(&menuSFX);
+	menu0SFX.setBuffer(menu0SFXbuffer);
+	menu0SFX.setVolume(sfxVolume);
+	allSFXvector.push_back(&menu0SFX);
 
+	sf::Sound menu1SFX;
+	sf::SoundBuffer menu1SFXbuffer;
+	std::string menu1SFXbufferPath = "resources/sounds/menu4.wav";
+	if(!menu1SFXbuffer.loadFromFile(menu1SFXbufferPath))
+	{
+		std::cerr << "failed to load \"" << menu1SFXbufferPath << "\"" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	menu1SFX.setBuffer(menu1SFXbuffer);
+	menu1SFX.setVolume(sfxVolume);
+	allSFXvector.push_back(&menu1SFX);
 
 	sf::Sound jumpSFX;
 	sf::SoundBuffer jumpSFXbuffer;
@@ -309,6 +349,11 @@ int main()
 	missileLaunchingSFX.setBuffer(missileLaunchingSFXbuffer);
 	missileLaunchingSFX.setVolume(sfxVolume);
 	allSFXvector.push_back(&missileLaunchingSFX);
+
+	for(int x = 0; x < allSFXvector.size(); x++)
+	{
+		allSFXvector[x]->setVolume(masterVolume);
+	}
 
 	//debug FPS font stuff
 	bool drawFPS = false;
@@ -368,41 +413,117 @@ int main()
 			lastlastframe = std::chrono::high_resolution_clock::now();
 			window.clear(sf::Color::Black);
 			
+			//update background
+			if(background.getPosition().x <= backgroundOriginalX - (background.getGlobalBounds().width / backgroundTextureMultiplier))
+			{
+				background.setPosition(backgroundOriginalX, backgroundOriginalY);
+			}
+			background.move(-1 * backgroundSpeed * deltaTime.count(), 0);
 			window.draw(background);
-			
-			if(startButton.getGlobalBounds().contains(sf::Vector2f(window.mapPixelToCoords(sf::Mouse::getPosition(window), view)))) //view is in coords, without view is in pixels
+	
+			//startButton logic
+				//I should prolly just throw all this into a single button class... kill me. Tuesday, November 26, 2024, 10:40:49
+			if(startButton.getGlobalBounds().contains(window.mapPixelToCoords(sf::Mouse::getPosition(window), view))) //view is in coords, without view is in pixels
 			{
 				startButton.setTextureRect(spriteSheetFrame(startButtonFrameWidth, startButtonFrameHeight, 1));
 
-				if(!startButtonHoveredOver)
+				if(!startButtonHoveredOver && !startButtonClicked && !viewHighscoresButtonClicked)
 				{
-					menuSFX.play();
+					menu0SFX.play();
 				}
 				startButtonHoveredOver = true;
 
 				if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
 				{
-					menuSFX.play();
-					for(int x = 0 + 2; x < 8 + 2; x++)
+					if(!startButtonClicked && !viewHighscoresButtonClicked)
 					{
-						startButton.setTextureRect(spriteSheetFrame(startButtonFrameWidth, startButtonFrameHeight, 2 + (x % 2)));
-						window.clear(sf::Color::Black);
-						window.draw(background);
-						window.draw(startButton);
-						window.display();
-						SLEEP(0.1);
+						startButtonClicked = true;
+						menu1SFX.play();
 					}
-					startMenu = false;
-					playerIsAlive = true;
-					continue;
 				}
+
 			} else
 			{
 				startButtonHoveredOver = false;
 				startButton.setTextureRect(spriteSheetFrame(startButtonFrameWidth, startButtonFrameHeight, 0));
 			}
 
+			if(startButtonClicked)
+			{
+				if(startButtonFlashAnimationCount >= startButtonFlashAnimationCountThreshold)
+				{
+					startButtonFlashAnimationTickDelta = std::chrono::seconds::zero();
+
+					startMenu = false;
+					playerIsAlive = true;
+					continue;
+				} else
+				{
+					if(startButtonFlashAnimationTickDelta.count() >= startButtonFlashAnimationTickDeltaThreshold)
+					{
+						startButtonFlashAnimationTickDelta = std::chrono::seconds::zero();
+						startButtonFlashAnimationCount++;
+					} else
+					{
+						startButtonFlashAnimationTickDelta += deltaTime;
+					}
+
+					startButton.setTextureRect(spriteSheetFrame(startButtonFrameWidth, startButtonFrameHeight, 2 + (startButtonFlashAnimationCount % 2)));
+				}
+			}
+
+			//viewHighscoresButton logic
+			if(viewHighscoresButton.getGlobalBounds().contains(window.mapPixelToCoords(sf::Mouse::getPosition(window), view)))
+			{
+				viewHighscoresButton.setTextureRect(spriteSheetFrame(viewHighscoresButtonFrameWidth, viewHighscoresButtonFrameHeight, 1));
+
+				if(!viewHighscoresButtonHoveredOver && !viewHighscoresButtonClicked && !startButtonClicked)
+				{
+					menu0SFX.play();
+				}
+				viewHighscoresButtonHoveredOver = true;
+
+				if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
+				{
+					if(!viewHighscoresButtonClicked && !startButtonClicked)
+					{
+						viewHighscoresButtonClicked = true;
+						menu1SFX.play();
+					}
+				}
+
+			} else
+			{
+				viewHighscoresButtonHoveredOver = false;
+				viewHighscoresButton.setTextureRect(spriteSheetFrame(viewHighscoresButtonFrameWidth, viewHighscoresButtonFrameHeight, 0));
+			}
+
+			if(viewHighscoresButtonClicked)
+			{
+				if(viewHighscoresButtonFlashAnimationCount >= viewHighscoresButtonFlashAnimationCountThreshold)
+				{
+					viewHighscoresButtonFlashAnimationTickDelta = std::chrono::seconds::zero();
+
+					startMenu = false;
+					playerIsAlive = true;
+					continue;
+				} else
+				{
+					if(viewHighscoresButtonFlashAnimationTickDelta.count() >= viewHighscoresButtonFlashAnimationTickDeltaThreshold)
+					{
+						viewHighscoresButtonFlashAnimationTickDelta = std::chrono::seconds::zero();
+						viewHighscoresButtonFlashAnimationCount++;
+					} else
+					{
+						viewHighscoresButtonFlashAnimationTickDelta += deltaTime;
+					}
+
+					viewHighscoresButton.setTextureRect(spriteSheetFrame(viewHighscoresButtonFrameWidth, viewHighscoresButtonFrameHeight, 2 + (viewHighscoresButtonFlashAnimationCount % 2)));
+				}
+			}
+
 			window.draw(startButton);
+			window.draw(viewHighscoresButton);
 
 			window.display();
 			lastframe = std::chrono::high_resolution_clock::now();
@@ -410,13 +531,13 @@ int main()
 
 		} else if(pauseMenu || settingsMenu)
 		{
-			if(quitButton.getGlobalBounds().contains(sf::Vector2f(window.mapPixelToCoords(sf::Mouse::getPosition(window), view))))
+			if(quitButton.getGlobalBounds().contains(window.mapPixelToCoords(sf::Mouse::getPosition(window), view)))
 			{
 				quitButton.setTextureRect(spriteSheetFrame(quitButtonFrameWidth, quitButtonFrameHeight, 1));
 
 				if(!quitButtonHoveredOver)
 				{
-					menuSFX.play();
+					menu0SFX.play();
 				}
 				quitButtonHoveredOver = true;
 			} else
@@ -433,7 +554,7 @@ int main()
 				}
 				pauseMenu = false;
 				settingsMenu = false;
-				menuSFX.play();
+				menu1SFX.play();
 			}
 
 			//draw and deltaTime
@@ -486,35 +607,31 @@ int main()
 
 		} else if(deathMenu)
 		{
-			animatePlayAgainButtonDuration += deltaTime;
-
 			lastlastframe = std::chrono::high_resolution_clock::now();
 			window.clear(sf::Color::Black);
 			
+			//update background
+			if(background.getPosition().x <= backgroundOriginalX - (background.getGlobalBounds().width / backgroundTextureMultiplier))
+			{
+				background.setPosition(backgroundOriginalX, backgroundOriginalY);
+			}
+			background.move(-1 * backgroundSpeed * deltaTime.count(), 0);
 			window.draw(background);
 
-			if(playAgainButton.getGlobalBounds().contains(sf::Vector2f(window.mapPixelToCoords(sf::Mouse::getPosition(window), view)))) //view is in coords, without view is in pixels
+			//playAgainButton logic
+			if(playAgainButton.getGlobalBounds().contains(window.mapPixelToCoords(sf::Mouse::getPosition(window), view))) //view is in coords, without view is in pixels
 			{
 				playAgainButton.setTextureRect(spriteSheetFrame(playAgainButtonFrameWidth, playAgainButtonFrameHeight, 2));
 
 				if(!playAgainButtonHoveredOver)
 				{
-					menuSFX.play();
+					menu0SFX.play();
 				}
 				playAgainButtonHoveredOver = true;
 
 				if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
 				{
-					menuSFX.play();
-					for(int x = 0 + 2; x < 8 + 2; x++)
-					{
-						playAgainButton.setTextureRect(spriteSheetFrame(playAgainButtonFrameWidth, playAgainButtonFrameHeight, 3 + (x % 2)));
-						window.clear(sf::Color::Black);
-						window.draw(background);
-						window.draw(playAgainButton);
-						window.display();
-						SLEEP(0.1);
-					}
+					menu1SFX.play();
 					deathMenu = false;
 					playerIsAlive = true;
 					playerInitialJump = false;
@@ -523,14 +640,17 @@ int main()
 			} else
 			{
 				playAgainButtonHoveredOver = false;
-				if(animatePlayAgainButtonDuration.count() >= animatePlayAgainButtonDurationThreshold * 2)
+				if(playAgainButtonIdleAnimationTickDelta.count() >= playAgainButtonIdleAnimationTickDeltaThreshold * 2)
 				{
-					playAgainButton.setTextureRect(spriteSheetFrame(playAgainButtonFrameWidth, playAgainButtonFrameHeight, 0));
-					animatePlayAgainButtonDuration = std::chrono::seconds::zero();
-				} else if(animatePlayAgainButtonDuration.count() >= animatePlayAgainButtonDurationThreshold)
+					playAgainButtonIdleAnimationTickDelta = std::chrono::seconds::zero();
+				} else if(playAgainButtonIdleAnimationTickDelta.count() >= playAgainButtonIdleAnimationTickDeltaThreshold)
 				{
 					playAgainButton.setTextureRect(spriteSheetFrame(playAgainButtonFrameWidth, playAgainButtonFrameHeight, 1));
+				} else
+				{
+					playAgainButton.setTextureRect(spriteSheetFrame(playAgainButtonFrameWidth, playAgainButtonFrameHeight, 0));
 				}
+				playAgainButtonIdleAnimationTickDelta += deltaTime;
 			}
 
 			window.draw(playAgainButton);
@@ -621,7 +741,7 @@ int main()
 			playerY += playerYvelocity * deltaTime.count();
 			playerX += playerXvelocity * deltaTime.count();
 
-			playerAngle = playerYvelocity * -1 * playerAngleMultiplier;// * deltaTime.count();
+			playerAngle = playerYvelocity * -1 * playerAngleMultiplier;
 
 			playerHitbox.setPosition(playerX, playerY);
 			player.setPosition(playerX, playerY);
@@ -765,7 +885,7 @@ int main()
 			playerY += playerYvelocity * deltaTime.count();
 			playerX += playerXvelocity * deltaTime.count();
 
-			playerAngle = playerYvelocity * -1 * playerAngleMultiplier;// * deltaTime.count();
+			playerAngle = playerYvelocity * -1 * playerAngleMultiplier;
 
 			playerHitbox.setPosition(playerX, playerY);
 			player.setPosition(playerX, playerY);
@@ -775,7 +895,14 @@ int main()
 			lastlastframe = std::chrono::high_resolution_clock::now();
 			window.clear(sf::Color::Black);
 		
+			//update background
+			if(background.getPosition().x <= backgroundOriginalX - (background.getGlobalBounds().width / backgroundTextureMultiplier))
+			{
+				background.setPosition(backgroundOriginalX, backgroundOriginalY);
+			}
+			background.move(-1 * backgroundSpeed * deltaTime.count(), 0);
 			window.draw(background);
+
 			for(int x = 0; x < pipes.size(); x++)
 			{
 				window.draw(pipes[x].getTopPipe());
