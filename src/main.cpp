@@ -36,9 +36,12 @@ int main()
 		std::cerr << "failed to load \"" << playerTexturePath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+
+	const sf::Vector2f playerScale(4, 4);
+
 	player.setTexture(playerTexture);
 	player.setOrigin(player.getLocalBounds().width / 2, player.getLocalBounds().height / 2);
-	player.setScale(sf::Vector2f(4, 4));
+	player.setScale(playerScale);
 
 	double defaultPlayerX = screenWidth / 4;
 	double defaultPlayerY = screenHeight / 2;
@@ -54,6 +57,7 @@ int main()
 	bool playerJumpedLastTime = false;
 	bool playerIsAlive = true;
 	bool startMenu = true;
+	bool viewHighscoresMenu = false;
 	bool pauseMenu = false;
 	bool deathMenu = false;
 	bool settingsMenu = false;
@@ -91,7 +95,7 @@ int main()
 	playerJumpIndicator.setTexture(playerJumpIndicatorTexture);
 	playerJumpIndicator.setTextureRect(spriteSheetFrame(playerJumpIndicatorFrameWidth, playerJumpIndicatorFrameHeight, 0));
 	playerJumpIndicator.setOrigin(playerJumpIndicator.getLocalBounds().width / 2, playerJumpIndicator.getLocalBounds().height / 2);
-	playerJumpIndicator.setScale(sf::Vector2f(4, 4));
+	playerJumpIndicator.setScale(playerScale);
 	playerJumpIndicator.setPosition(playerX, playerY + playerJumpIndicatorYoffsetFix);
 	
 	std::chrono::duration<double> animatePlayerJumpIndicatorDuration = std::chrono::seconds::zero();
@@ -133,41 +137,43 @@ int main()
 		std::cerr << "failed to load \"" << backgroundTexturePath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	const sf::Vector2f backgroundScale(7.5, 7.5);
 	int backgroundTextureMultiplier = 8;
 	backgroundTexture.setRepeated(true);
 	background.setTextureRect(sf::IntRect(0, 0, backgroundTexture.getSize().x * backgroundTextureMultiplier, backgroundTexture.getSize().y));
 	background.setTexture(backgroundTexture);
-	background.setScale(sf::Vector2f(7.5, 7.5));
+	background.setScale(backgroundScale);
 	background.setOrigin(background.getLocalBounds().width / 2, background.getLocalBounds().height / 2);
 	background.setPosition(screenWidth / 2, screenHeight / 2);
 	double backgroundOriginalX = background.getPosition().x;
 	double backgroundOriginalY = background.getPosition().y;
 	double backgroundSpeed = 50;
 
-	//score
-	sf::Text scoreText;
-	sf::Font scoreTextFont;
-	std::string scoreTextFontPath = "resources/fonts/Minecraftia-Regular.ttf";
-	if(!scoreTextFont.loadFromFile(scoreTextFontPath))
-	{
-		std::cout << "failed to load\"" << scoreTextFontPath << "\"" << std::endl;
-		exit(EXIT_FAILURE);
-	}
-	scoreText.setFont(scoreTextFont);
-	scoreText.setCharacterSize(50);
-	//scoreText.setScale(sf::Vector2f(2, 2));
-	scoreText.setString(std::to_string(playerCurrentScore));
-	scoreText.setOrigin(scoreText.getLocalBounds().width / 2, scoreText.getLocalBounds().height / 2);
-	scoreText.setPosition(screenWidth / 2, screenHeight * 0.2);
-
 	//ceiling
-	sf::RectangleShape ceiling(sf::Vector2f(screenWidth, screenHeight * 0.1));
+	sf::RectangleShape ceiling(sf::Vector2f(screenWidth, screenHeight * 0.03));
 	ceiling.setFillColor(sf::Color::Cyan);
 
 	//floor
 	sf::RectangleShape floor(sf::Vector2f(screenWidth, screenHeight * 0.1));
 	floor.setPosition(0, screenHeight - floor.getLocalBounds().height);
 	floor.setFillColor(sf::Color::Cyan);
+	
+	//score
+	sf::Text currentScoreText;
+	sf::Font masterFont;
+	std::string masterFontPath = "resources/fonts/Minecraftia-Regular.ttf";
+	if(!masterFont.loadFromFile(masterFontPath))
+	{
+		std::cout << "failed to load\"" << masterFontPath << "\"" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	const sf::Vector2f scoreTextScale(1, 1);
+	currentScoreText.setFont(masterFont);
+	currentScoreText.setCharacterSize(50);
+	currentScoreText.setScale(scoreTextScale);
+	currentScoreText.setString(std::to_string(playerCurrentScore));
+	currentScoreText.setOrigin(currentScoreText.getLocalBounds().width / 2, currentScoreText.getLocalBounds().height / 2);
+	currentScoreText.setPosition(screenWidth / 2, screenHeight / 10);
 	
 	//start menu
 	sf::Sprite startButton;
@@ -178,21 +184,23 @@ int main()
 		std::cerr << "failed to load \"" << startButtonTexturePath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	const sf::Vector2f startButtonScale(10, 10);
 	const int startButtonFrameWidth = 33;
 	const int startButtonFrameHeight = 13;
 	bool startButtonHoveredOver = false;
 	bool startButtonClicked = false;
 	int startButtonFlashAnimationCount = 0;
-	const int startButtonFlashAnimationCountThreshold = 10;
+	const int startButtonFlashAnimationCountThreshold = 5;
 	std::chrono::duration<double> startButtonFlashAnimationTickDelta = std::chrono::seconds::zero();
 	double startButtonFlashAnimationTickDeltaThreshold = 0.08;
 
 	startButton.setTexture(startButtonTexture);
 	startButton.setTextureRect(sf::IntRect(0, 0, startButtonFrameWidth, startButtonFrameHeight));
-	startButton.setScale(sf::Vector2f(10, 10));
+	startButton.setScale(startButtonScale);
 	startButton.setOrigin(startButton.getLocalBounds().width / 2, startButton.getLocalBounds().height / 2);
 	startButton.setPosition(screenWidth / 2, (screenHeight / 5) * 2);
 
+	//viewHighscoresButton stuff
 	sf::Sprite viewHighscoresButton;
 	sf::Texture viewHighscoresButtonTexture;
 	std::string viewHighscoresButtonTexturePath = "resources/textures/viewhighscoresbutton-Sheet.png";
@@ -201,20 +209,41 @@ int main()
 		std::cerr << "failed to load \"" << viewHighscoresButtonTexturePath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	const sf::Vector2f viewHighscoresButtonScale(10, 10);
 	const int viewHighscoresButtonFrameWidth = 93;
 	const int viewHighscoresButtonFrameHeight = 13;
 	bool viewHighscoresButtonHoveredOver = false;
 	bool viewHighscoresButtonClicked = false;
 	int viewHighscoresButtonFlashAnimationCount = 0;
-	const int viewHighscoresButtonFlashAnimationCountThreshold = 10;
+	const int viewHighscoresButtonFlashAnimationCountThreshold = 3;
 	std::chrono::duration<double> viewHighscoresButtonFlashAnimationTickDelta = std::chrono::seconds::zero();
 	double viewHighscoresButtonFlashAnimationTickDeltaThreshold = 0.08;
+	const int viewHighscoresButtonPosition0x = screenWidth / 2;
+	const int viewHighscoresButtonPosition0y = (screenHeight / 5) * 3;
+	const int viewHighscoresButtonPosition1x = screenWidth / 2;
+	const int viewHighscoresButtonPosition1y = screenHeight / 8;
 
 	viewHighscoresButton.setTexture(viewHighscoresButtonTexture);
 	viewHighscoresButton.setTextureRect(sf::IntRect(0, 0, viewHighscoresButtonFrameWidth, viewHighscoresButtonFrameHeight));
-	viewHighscoresButton.setScale(sf::Vector2f(10, 10));
+	viewHighscoresButton.setScale(viewHighscoresButtonScale);
 	viewHighscoresButton.setOrigin(viewHighscoresButton.getLocalBounds().width / 2, viewHighscoresButton.getLocalBounds().height / 2);
-	viewHighscoresButton.setPosition(screenWidth / 2, (screenHeight / 5) * 3);
+	viewHighscoresButton.setPosition(viewHighscoresButtonPosition0x, viewHighscoresButtonPosition0y);
+
+	sf::RectangleShape viewHighscoresBackboardRect(sf::Vector2f(viewHighscoresButtonFrameWidth, viewHighscoresButtonFrameHeight * 7));
+	viewHighscoresBackboardRect.setFillColor(sf::Color::Black);
+	viewHighscoresBackboardRect.setScale(viewHighscoresButtonScale);
+	viewHighscoresBackboardRect.setOrigin(viewHighscoresBackboardRect.getLocalBounds().width / 2, viewHighscoresBackboardRect.getLocalBounds().height / 2);
+	viewHighscoresBackboardRect.setPosition(screenWidth / 2, viewHighscoresButtonPosition1y * 7);
+
+	const int viewHighscoresTextLeftMarigin = 20;
+	const int viewHighscoresTextTopMarigin = 40;
+	sf::Text viewHighscoresText;
+	viewHighscoresText.setFont(masterFont);
+	viewHighscoresText.setCharacterSize(24);
+	viewHighscoresText.setPosition(
+			viewHighscoresBackboardRect.getGlobalBounds().left + viewHighscoresTextLeftMarigin,
+			viewHighscoresBackboardRect.getGlobalBounds().top + viewHighscoresTextTopMarigin
+			);
 
 	//death menu & high score screen
 	sf::Sprite playAgainButton;
@@ -225,6 +254,7 @@ int main()
 		std::cerr << "failed to load \"" << playAgainButtonTexturePath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	const sf::Vector2f playAgainButtonScale(10, 10);
 	const int playAgainButtonFrameWidth = 68;
 	const int playAgainButtonFrameHeight = 13;
 	bool playAgainButtonHoveredOver = false;
@@ -233,7 +263,7 @@ int main()
 
 	playAgainButton.setTexture(playAgainButtonTexture);
 	playAgainButton.setTextureRect(sf::IntRect(0, 0, playAgainButtonFrameWidth, playAgainButtonFrameHeight));
-	playAgainButton.setScale(sf::Vector2f(10, 10));
+	playAgainButton.setScale(playAgainButtonScale);
 	playAgainButton.setOrigin(playAgainButton.getLocalBounds().width / 2, playAgainButton.getLocalBounds().height / 2);
 	playAgainButton.setPosition(screenWidth / 2, screenHeight / 2);
 
@@ -242,7 +272,7 @@ int main()
 	sf::RectangleShape dimScreenShape(sf::Vector2f(screenWidth, screenHeight));
 	dimScreenShape.setFillColor(sf::Color(0, 0, 0, dimScreenShapeDefaultDim));
 	sf::Text dimScreenText;
-	dimScreenText.setFont(scoreTextFont); //note to self as ofThursday, October 17, 2024, 14:14:38 --> make this default font...? change def
+	dimScreenText.setFont(masterFont); //note to self as ofThursday, October 17, 2024, 14:14:38 --> make this default font...? change def
 	
 	sf::Sprite quitButton;
 	sf::Texture quitButtonTexture;
@@ -252,13 +282,14 @@ int main()
 		std::cerr << "failed to load \"" << quitButtonTexturePath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	const sf::Vector2f quitButtonScale(10, 10);
 	const int quitButtonFrameWidth = 29;
 	const int quitButtonFrameHeight = 13;
 	bool quitButtonHoveredOver = false;
 
 	quitButton.setTexture(quitButtonTexture);
 	quitButton.setTextureRect(spriteSheetFrame(quitButtonFrameWidth, quitButtonFrameHeight, 0));
-	quitButton.setScale(sf::Vector2f(10, 10));
+	quitButton.setScale(quitButtonScale);
 	quitButton.setOrigin(quitButton.getLocalBounds().width / 2, quitButton.getLocalBounds().height / 2);
 	quitButton.setPosition(screenWidth / 2, (screenHeight / 4) * 3);
 
@@ -358,7 +389,7 @@ int main()
 	//debug FPS font stuff
 	bool drawFPS = false;
 	sf::Text fps;
-	fps.setFont(scoreTextFont);
+	fps.setFont(masterFont);
 	fps.setPosition(10, 100);
 	fps.setString("0");
 
@@ -454,6 +485,8 @@ int main()
 				{
 					startButtonFlashAnimationTickDelta = std::chrono::seconds::zero();
 
+					startButtonFlashAnimationCount = 0;
+					startButtonClicked = false;
 					startMenu = false;
 					playerIsAlive = true;
 					continue;
@@ -504,8 +537,19 @@ int main()
 				{
 					viewHighscoresButtonFlashAnimationTickDelta = std::chrono::seconds::zero();
 
+					std::string tempViewHighscoresBackboardText = "";
+					getSavedScores(playerScores);
+					for(std::map<std::string, int>::iterator it = playerScores.begin(); it != playerScores.end(); ++it)
+					{
+						tempViewHighscoresBackboardText += it->first + " ---> " + std::to_string(it->second) + "\n";
+					}
+					viewHighscoresText.setString(tempViewHighscoresBackboardText);
+
+					viewHighscoresButton.setPosition(viewHighscoresButtonPosition1x, viewHighscoresButtonPosition1y);
+					viewHighscoresButtonFlashAnimationCount = 0;
+					viewHighscoresButtonClicked = false;
 					startMenu = false;
-					playerIsAlive = true;
+					viewHighscoresMenu = true;
 					continue;
 				} else
 				{
@@ -529,6 +573,81 @@ int main()
 			lastframe = std::chrono::high_resolution_clock::now();
 			deltaTime = lastframe - lastlastframe;
 
+		} else if(viewHighscoresMenu)
+		{
+			//draw and deltaTime
+			lastlastframe = std::chrono::high_resolution_clock::now();
+			window.clear(sf::Color::Black);
+			
+			//update background
+			if(background.getPosition().x <= backgroundOriginalX - (background.getGlobalBounds().width / backgroundTextureMultiplier))
+			{
+				background.setPosition(backgroundOriginalX, backgroundOriginalY);
+			}
+			background.move(-1 * backgroundSpeed * deltaTime.count(), 0);
+			window.draw(background);
+
+			//viewHighscoresButton logic
+			if(viewHighscoresButton.getGlobalBounds().contains(window.mapPixelToCoords(sf::Mouse::getPosition(window), view)))
+			{
+				viewHighscoresButton.setTextureRect(spriteSheetFrame(viewHighscoresButtonFrameWidth, viewHighscoresButtonFrameHeight, 1));
+
+				if(!viewHighscoresButtonHoveredOver && !viewHighscoresButtonClicked && !startButtonClicked)
+				{
+					menu0SFX.play();
+				}
+				viewHighscoresButtonHoveredOver = true;
+
+				if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
+				{
+					if(!viewHighscoresButtonClicked && !startButtonClicked)
+					{
+						viewHighscoresButtonClicked = true;
+						menu1SFX.play();
+					}
+				}
+
+			} else
+			{
+				viewHighscoresButtonHoveredOver = false;
+				viewHighscoresButton.setTextureRect(spriteSheetFrame(viewHighscoresButtonFrameWidth, viewHighscoresButtonFrameHeight, 0));
+			}
+
+			if(viewHighscoresButtonClicked)
+			{
+				if(viewHighscoresButtonFlashAnimationCount >= viewHighscoresButtonFlashAnimationCountThreshold)
+				{
+					viewHighscoresButtonFlashAnimationTickDelta = std::chrono::seconds::zero();
+
+					viewHighscoresButton.setPosition(viewHighscoresButtonPosition0x, viewHighscoresButtonPosition0y);
+					viewHighscoresButtonFlashAnimationCount = 0;
+					viewHighscoresButtonClicked = false;
+					startMenu = true;
+					viewHighscoresMenu = false;
+					continue;
+				} else
+				{
+					if(viewHighscoresButtonFlashAnimationTickDelta.count() >= viewHighscoresButtonFlashAnimationTickDeltaThreshold)
+					{
+						viewHighscoresButtonFlashAnimationTickDelta = std::chrono::seconds::zero();
+						viewHighscoresButtonFlashAnimationCount++;
+					} else
+					{
+						viewHighscoresButtonFlashAnimationTickDelta += deltaTime;
+					}
+
+					viewHighscoresButton.setTextureRect(spriteSheetFrame(viewHighscoresButtonFrameWidth, viewHighscoresButtonFrameHeight, 2 + (viewHighscoresButtonFlashAnimationCount % 2)));
+				}
+			}
+			window.draw(viewHighscoresButton);
+
+			//draw highscores and stuff
+			window.draw(viewHighscoresBackboardRect);
+			window.draw(viewHighscoresText);
+
+			window.display();
+			lastframe = std::chrono::high_resolution_clock::now();
+			deltaTime = lastframe - lastlastframe;
 		} else if(pauseMenu || settingsMenu)
 		{
 			if(quitButton.getGlobalBounds().contains(window.mapPixelToCoords(sf::Mouse::getPosition(window), view)))
@@ -587,7 +706,7 @@ int main()
 				window.draw(playerHitbox);
 			}
 
-			window.draw(scoreText);
+			window.draw(currentScoreText);
 			if(drawFPS)
 			{
 				window.draw(fps);
@@ -728,7 +847,8 @@ int main()
 				//ceiling?
 				if(playerHitbox.getGlobalBounds().intersects(ceiling.getGlobalBounds()))
 				{
-					playerY = ceiling.getGlobalBounds().height + player.getGlobalBounds().top;
+					//playerY = ceiling.getGlobalBounds().height + player.getGlobalBounds().top;
+					playerYvelocity = 100;
 				} else if(playerHitbox.getGlobalBounds().intersects(floor.getGlobalBounds()) || playerHitbox.getPosition().y >= floor.getPosition().y)
 				{
 					playerIsAlive = false;
@@ -808,7 +928,7 @@ int main()
 				if(!pipes[x].hasPastPlayer() && pipes[x].isPastPlayer(playerX))
 				{
 					playerCurrentScore++;
-					scoreText.setString(std::to_string(playerCurrentScore));
+					currentScoreText.setString(std::to_string(playerCurrentScore));
 					scoreSFX.play();
 					if(RANDOM(0, 10) == 5 && !pipesSubroutine)
 					{
@@ -867,7 +987,7 @@ int main()
 				window.draw(missiles[x].getMissile());
 			}
 
-			window.draw(scoreText);
+			window.draw(currentScoreText);
 			if(drawFPS)
 			{
 				window.draw(fps);
@@ -915,7 +1035,7 @@ int main()
 
 			window.draw(player);
 
-			window.draw(scoreText);
+			window.draw(currentScoreText);
 			if(drawFPS)
 			{
 				window.draw(fps);
@@ -944,7 +1064,7 @@ int main()
 
 				playerJumpedLastTime = false;
 
-				scoreText.setString("0");
+				currentScoreText.setString("0");
 				playerHitbox.setPosition(playerX, playerY);
 				player.setPosition(playerX, playerY);
 				player.setRotation(playerAngle);
