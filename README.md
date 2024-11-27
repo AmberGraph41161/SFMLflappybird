@@ -10,11 +10,11 @@
 
 ### Resources
 
-***ART***
+***Art***
 
 > all art done by me, drawn by hand in aseprite
 
-***SOUNDS/SFX***
+***Sounds/SFX***
 
 > all sfx done by me in SFXR
 
@@ -29,10 +29,15 @@
 
 ## Linux
 
-dependencies:
-> sfml >= 2.6.1
+Dependencies:
 
-> clang++ (provided Makefile uses clang++. You can probably edit the makefile if wanted)
+> make >= 4.4.1
+
+> libsfml >= 2.6.1
+
+> clang >= 18.1.8
+>  
+> (provided Makefile uses clang++. You can probably edit the makefile if wanted)
 
 ### My distro's repos *DON'T* have SFML:
 
@@ -90,7 +95,51 @@ make
 ```
 
 ## Windows
-broken as of Friday, November 22, 2024, 18:10:56
+
+> If you are not using MinGW, you're on your own. Good luck
+
+Prerequisites:
+
+- Software needed:
+    - MinGW (g++/gcc, mingw32-make)
+    - CMake
+    - git bash
+
+1. open git bash terminal, clone the repository, and then cd into it
+```shell
+git clone https://github.com/AmberGraph41161/SFMLflappybird && cd SFMLflappybird
+```
+
+2. make build directory and cd into it
+```shell
+mkdir build && cd build
+```
+
+3. run the following CMake command to generate a makefile:
+```shell
+cmake -G "MinGW Makefiles" ..
+```
+
+4. run mingw32-make on the CMake generated makefile
+```shell
+mingw32-make
+```
+
+5. move new binary to parent folder
+```shell
+mv SFMLflappybird.exe ..
+```
+
+6. copy necessary .dll files into same directory as SFMLflappybird binary
+```shell
+cp _deps/sfml-build/lib/* ../
+cp _deps/sfml-src/extlibs/bin/x86/openal32.dll ../
+```
+
+7. finally, cd into parent directory, run SFMLflappybird, and enjoy!
+```shell
+cd .. && ./SFMLflappybird.exe
+```
 
 ## MacOS (OS X)
 not tested as of Friday, November 22, 2024, 18:11:25
