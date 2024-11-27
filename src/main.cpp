@@ -27,6 +27,17 @@ int main()
 	const double screenWidth = 1080;
 	const double screenHeight = 720;
 
+	//textinput event stuff
+	const int captureTextInputEventAsciiLowerBound = 32; //32;
+	const int captureTextInputEventAsciiUpperBound = 126;
+	const int captureTextInputEventAsciiBackspace = 8;
+	const int captureTextInputEventAsciiNewLineFeed = 10;
+	const int captureTextInputEventAsciiNewPageFormFeed = 12;
+	const int captureTextInputEventAsciiCarriageReturn = 13;
+	const int captureTextInputEventAsciiDelete = 127;
+	bool captureTextInputEvents = false;
+	std::string capturedTextInput = "";
+
 	//load player stuff
 	sf::Sprite player;
 	sf::Texture playerTexture;
@@ -67,6 +78,26 @@ int main()
 	std::map<std::string, int> playerScores;
 	getSavedScores(playerScores);
 	std::string playerName = getSavedPlayerName();
+
+	//displaying playerName
+	sf::Text playerNameText;
+	sf::Font masterFont;
+	std::string masterFontPath = "resources/fonts/Minecraftia-Regular.ttf";
+	if(!masterFont.loadFromFile(masterFontPath))
+	{
+		std::cout << "failed to load\"" << masterFontPath << "\"" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	const int playerNameTextCharacterSize = 24;
+	const int playerNameTextLeftMarigin = 10;
+	const int playerNameTextTopMarigin = 20;
+	bool playerNameTextHoveredOver = false;
+	bool playerNameTextClicked = false;
+	bool playerNameTextSavedToFile = true;
+	playerNameText.setFont(masterFont);
+	playerNameText.setCharacterSize(playerNameTextCharacterSize);
+	playerNameText.setPosition(0 + playerNameTextLeftMarigin, 0 + playerNameTextTopMarigin);
+	playerNameText.setString(playerName);
 
 	//player settings...?
 	bool displayHitboxes = false;
@@ -160,13 +191,6 @@ int main()
 	
 	//score
 	sf::Text currentScoreText;
-	sf::Font masterFont;
-	std::string masterFontPath = "resources/fonts/Minecraftia-Regular.ttf";
-	if(!masterFont.loadFromFile(masterFontPath))
-	{
-		std::cout << "failed to load\"" << masterFontPath << "\"" << std::endl;
-		exit(EXIT_FAILURE);
-	}
 	const sf::Vector2f scoreTextScale(1, 1);
 	currentScoreText.setFont(masterFont);
 	currentScoreText.setCharacterSize(50);
@@ -286,6 +310,7 @@ int main()
 	const int quitButtonFrameWidth = 29;
 	const int quitButtonFrameHeight = 13;
 	bool quitButtonHoveredOver = false;
+	bool quitToStartMenu = false;
 
 	quitButton.setTexture(quitButtonTexture);
 	quitButton.setTextureRect(spriteSheetFrame(quitButtonFrameWidth, quitButtonFrameHeight, 0));
@@ -431,6 +456,45 @@ int main()
 				}
 				window.setView(view);
 			}
+			
+			//thank you internet
+				//"https://stackoverflow.com/questions/54681508/how-can-i-add-a-sort-of-text-box-in-sfml-using-keyboard-input-and-sftext-to-di"
+				//"https://en.sfml-dev.org/forums/index.php?topic=19965.0"
+			if(event.type == sf::Event::TextEntered)
+			{
+				if(captureTextInputEvents)
+				{
+					std::cout << event.text.unicode << std::endl;
+
+					//wtf ugly. fix later. Tuesday, November 26, 2024, 14:26:10
+					if(
+						event.text.unicode >= captureTextInputEventAsciiLowerBound &&
+						event.text.unicode <= captureTextInputEventAsciiUpperBound
+					)
+					{
+						capturedTextInput += static_cast<char>(event.text.unicode);
+					} else if(
+								(event.text.unicode == captureTextInputEventAsciiBackspace) ||
+								(event.text.unicode == captureTextInputEventAsciiDelete)
+							)
+					{
+						if(capturedTextInput.size() > 0)
+						{
+							capturedTextInput.pop_back();
+						}
+					} else if(
+								(event.text.unicode == captureTextInputEventAsciiNewLineFeed) ||
+								(event.text.unicode == captureTextInputEventAsciiNewPageFormFeed) ||
+								(event.text.unicode == captureTextInputEventAsciiCarriageReturn)
+							)
+					{
+						captureTextInputEvents = false;
+					}
+				} else
+				{
+					capturedTextInput = "";
+				}
+			}
 		}
 		if(sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
 		{
@@ -451,7 +515,55 @@ int main()
 			}
 			background.move(-1 * backgroundSpeed * deltaTime.count(), 0);
 			window.draw(background);
-	
+
+			//playerNameText logic
+			if(playerNameText.getGlobalBounds().contains(window.mapPixelToCoords(sf::Mouse::getPosition(window), view)))
+			{
+				if(!playerNameTextHoveredOver)
+				{
+					playerNameText.setCharacterSize(playerNameTextCharacterSize + 10);
+					menu0SFX.play();
+				}
+				playerNameTextHoveredOver = true;
+
+				if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
+				{
+					if(!playerNameTextClicked)
+					{
+						menu1SFX.play();
+						playerNameTextClicked = true;
+						captureTextInputEvents = true;
+						playerNameTextSavedToFile = false;
+					}
+				}
+			} else
+			{
+				playerNameTextHoveredOver = false;
+				playerNameTextClicked = false;
+
+				if(!playerNameTextHoveredOver)
+				{
+					playerNameText.setCharacterSize(playerNameTextCharacterSize);
+				}
+			}
+
+			if(captureTextInputEvents)
+			{
+				playerName = capturedTextInput;
+				playerNameText.setString(playerName);
+			} else if(!playerNameTextSavedToFile)
+			{
+				capturedTextInput = "";
+
+				if(playerName == "")
+				{
+					playerName = "player0";
+					playerNameText.setString(playerName);
+				}
+				savePlayerName(playerName);
+				playerNameTextSavedToFile = true;
+			}
+
 			//startButton logic
 				//I should prolly just throw all this into a single button class... kill me. Tuesday, November 26, 2024, 10:40:49
 			if(startButton.getGlobalBounds().contains(window.mapPixelToCoords(sf::Mouse::getPosition(window), view))) //view is in coords, without view is in pixels
@@ -566,6 +678,7 @@ int main()
 				}
 			}
 
+			window.draw(playerNameText);
 			window.draw(startButton);
 			window.draw(viewHighscoresButton);
 
@@ -644,6 +757,7 @@ int main()
 			//draw highscores and stuff
 			window.draw(viewHighscoresBackboardRect);
 			window.draw(viewHighscoresText);
+			window.draw(playerNameText);
 
 			window.display();
 			lastframe = std::chrono::high_resolution_clock::now();
@@ -669,6 +783,8 @@ int main()
 			{
 				if(quitButtonHoveredOver)
 				{
+					quitButtonHoveredOver = false;
+					quitToStartMenu = true;
 					playerIsAlive = false;
 				}
 				pauseMenu = false;
@@ -706,6 +822,7 @@ int main()
 				window.draw(playerHitbox);
 			}
 
+			window.draw(playerNameText);
 			window.draw(currentScoreText);
 			if(drawFPS)
 			{
@@ -773,49 +890,14 @@ int main()
 			}
 
 			window.draw(playAgainButton);
+			
+			window.draw(playerNameText);
 
 			window.display();
 			lastframe = std::chrono::high_resolution_clock::now();
 			deltaTime = lastframe - lastlastframe;
 		} else if(playerIsAlive && !deathMenu)//the game (maybe this is a bad idea...?)
 		{
-			//debug controls
-			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-			{
-				while(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-				{
-
-				}
-				pipeShrinkTunnel(pipes, &pipeTexture, 40, screenWidth - 100, screenHeight / 2);
-			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-			{
-				while(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-				{
-
-				}
-				pipeTunnel(pipes, &pipeTexture, 100, screenWidth - 100, screenHeight / 2);
-			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-			{
-			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-			{
-			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::R))
-			{
-			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-			{
-				while(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-				{
-
-				}
-				//pipes.emplace_back(Pipe(&pipeTexture, screenWidth - 100, RANDOMDOUBLE(300, screenHeight - 300), defaultPipeSpacing, defaultPipeSpeed));
-				missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3, screenHeight / 2, defaultMissileSpeed, &missileDroppingSFX, &missileLaunchingSFX));
-			} else if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
-			{
-				while(sf::Mouse::isButtonPressed(sf::Mouse::Left))
-				{
-					missiles.emplace_back(Missile(&missileTexture, window.mapPixelToCoords(sf::Mouse::getPosition(window), view).x, window.mapPixelToCoords(sf::Mouse::getPosition(window), view).y, defaultMissileSpeed, &missileDroppingSFX, &missileLaunchingSFX));
-				}
-			}
-
 			//pause menu...?
 			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
 			{
@@ -987,6 +1069,7 @@ int main()
 				window.draw(missiles[x].getMissile());
 			}
 
+			window.draw(playerNameText);
 			window.draw(currentScoreText);
 			if(drawFPS)
 			{
@@ -1035,6 +1118,7 @@ int main()
 
 			window.draw(player);
 
+			window.draw(playerNameText);
 			window.draw(currentScoreText);
 			if(drawFPS)
 			{
@@ -1069,8 +1153,15 @@ int main()
 				player.setPosition(playerX, playerY);
 				player.setRotation(playerAngle);
 
+				if(quitToStartMenu)
+				{
+					quitToStartMenu = false;
+					startMenu = true;
+				} else
+				{
+					deathMenu = true;
+				}
 				spawnDefaultRandomPipe(pipes, &pipeTexture, screenWidth, screenHeight);
-				deathMenu = true;
 			}
 		}
 	}

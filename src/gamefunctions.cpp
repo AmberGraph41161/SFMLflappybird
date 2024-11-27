@@ -41,7 +41,7 @@ sf::IntRect spriteSheetFrame(int spriteFrameWidth, int spriteFrameHeight, int fr
 void savePlayerName(std::string playerName)
 {
 	std::fstream write;
-	write.open("dat/playerName.txt", std::fstream::trunc);
+	write.open("dat/playerName.txt", std::fstream::out | std::fstream::trunc);
 	if(write.fail())
 	{
 		std::cerr << "failed to open \"dat/playerName.txt\"" << std::endl;
