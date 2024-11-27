@@ -310,7 +310,7 @@ int main()
 	const int quitButtonFrameWidth = 29;
 	const int quitButtonFrameHeight = 13;
 	bool quitButtonHoveredOver = false;
-	bool quitToStartMenu = false;
+	bool playDeathAnimationBeforeQuitToStartMenu = false;
 
 	quitButton.setTexture(quitButtonTexture);
 	quitButton.setTextureRect(spriteSheetFrame(quitButtonFrameWidth, quitButtonFrameHeight, 0));
@@ -764,6 +764,7 @@ int main()
 			deltaTime = lastframe - lastlastframe;
 		} else if(pauseMenu || settingsMenu)
 		{
+			//quitButton logic for pausemenu
 			if(quitButton.getGlobalBounds().contains(window.mapPixelToCoords(sf::Mouse::getPosition(window), view)))
 			{
 				quitButton.setTextureRect(spriteSheetFrame(quitButtonFrameWidth, quitButtonFrameHeight, 1));
@@ -784,8 +785,9 @@ int main()
 				if(quitButtonHoveredOver)
 				{
 					quitButtonHoveredOver = false;
-					quitToStartMenu = true;
+					playDeathAnimationBeforeQuitToStartMenu = true;
 					playerIsAlive = false;
+					playerInitialJump = false;
 				}
 				pauseMenu = false;
 				settingsMenu = false;
@@ -889,7 +891,35 @@ int main()
 				playAgainButtonIdleAnimationTickDelta += deltaTime;
 			}
 
+			//quitButton logic for play again menu
+			if(quitButton.getGlobalBounds().contains(window.mapPixelToCoords(sf::Mouse::getPosition(window), view)))
+			{
+				quitButton.setTextureRect(spriteSheetFrame(quitButtonFrameWidth, quitButtonFrameHeight, 1));
+
+				if(!quitButtonHoveredOver)
+				{
+					menu0SFX.play();
+				}
+				quitButtonHoveredOver = true;
+				
+				if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
+				{
+					quitButtonHoveredOver = false;
+					playerIsAlive = true;
+					playerInitialJump = false;
+					deathMenu = false;
+					startMenu = true;
+					menu1SFX.play();
+				}
+			} else
+			{
+				quitButtonHoveredOver = false;
+				quitButton.setTextureRect(spriteSheetFrame(quitButtonFrameWidth, quitButtonFrameHeight, 0));
+			}
+
+
 			window.draw(playAgainButton);
+			window.draw(quitButton);
 			
 			window.draw(playerNameText);
 
@@ -1153,9 +1183,9 @@ int main()
 				player.setPosition(playerX, playerY);
 				player.setRotation(playerAngle);
 
-				if(quitToStartMenu)
+				if(playDeathAnimationBeforeQuitToStartMenu)
 				{
-					quitToStartMenu = false;
+					playDeathAnimationBeforeQuitToStartMenu = false;
 					startMenu = true;
 				} else
 				{
