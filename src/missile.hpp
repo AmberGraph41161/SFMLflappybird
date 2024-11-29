@@ -1,6 +1,7 @@
 #ifndef MISSILE_HPP
 #define MISSILE_HPP
 
+#include <SFML/Graphics/RectangleShape.hpp>
 #include <chrono>
 #include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
@@ -15,6 +16,7 @@ public:
 	bool isOffScreenLeftRight(double left, double width);
 	bool isOffScreenBottomTop(double top, double height);
 	sf::Sprite getMissile();
+	sf::RectangleShape getMissileHitbox();
 
 	bool isSpawnAnimationFinished();
 
@@ -25,7 +27,9 @@ private:
 	int missileFrameWidth = 123;
 	int missileFrameHeight = 36;
 
-	//sf::RectangleShape hitbox(sf::Vector2f(1, 1));
+	sf::RectangleShape hitbox;
+	int hitboxXoffset = -50;
+
 	double x, y;
 	double xVelocity = 0;
 	double yVelocity = 0;

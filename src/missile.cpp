@@ -1,5 +1,7 @@
 #include "missile.hpp"
 
+#include <SFML/Graphics/RectangleShape.hpp>
+#include <SFML/System/Vector2.hpp>
 #include <chrono>
 #include <SFML/Graphics.hpp>
 
@@ -16,6 +18,10 @@ Missile::Missile(sf::Texture* missileTexture, double spawnX, double spawnY, doub
 	missile.setOrigin(missile.getLocalBounds().width / 2, missile.getLocalBounds().height / 2);
 	missile.setScale(sf::Vector2f(2, 2));
 
+	//(68 / 123) --> width of missile sprite in pixels excluding fire pixels
+	hitbox = sf::RectangleShape(sf::Vector2f((missile.getGlobalBounds().width / 123) * 60, missile.getGlobalBounds().height / 2));
+	hitbox.setOrigin(hitbox.getLocalBounds().width / 2, hitbox.getLocalBounds().height / 2);
+	hitbox.setFillColor(sf::Color::Cyan);
 }
 
 Missile::~Missile()
@@ -67,6 +73,8 @@ void Missile::move(double deltaTime)
 	}
 
 	missile.setPosition(x, y);
+	hitbox.setPosition(missile.getPosition());
+	hitbox.move(hitboxXoffset, 0);
 }
 
 bool Missile::isOffScreen(double left, double width, double top, double height)
@@ -107,6 +115,11 @@ bool Missile::isOffScreenBottomTop(double top, double height)
 sf::Sprite Missile::getMissile()
 {
 	return missile;
+}
+
+sf::RectangleShape Missile::getMissileHitbox()
+{
+	return hitbox;
 }
 
 

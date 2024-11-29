@@ -905,6 +905,11 @@ int main()
 			for(int x = 0; x < missiles.size(); x++)
 			{
 				window.draw(missiles[x].getMissile());
+
+				if(displayHitboxes)
+				{
+					window.draw(missiles[x].getMissileHitbox());
+				}
 			}
 
 			if(displayHitboxes)
@@ -1218,6 +1223,11 @@ int main()
 				}
 
 				window.draw(missiles[x].getMissile());
+
+				if(displayHitboxes)
+				{
+					window.draw(missiles[x].getMissileHitbox());
+				}
 			}
 
 			window.draw(playerNameText);
