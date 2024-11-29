@@ -1,5 +1,5 @@
 main
-dat/
+dat/*
 
 src/old/
 resources/old/
