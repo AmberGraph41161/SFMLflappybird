@@ -68,6 +68,8 @@ int main()
 	double gravity = 3000; //1.3
 	double antiGravity = gravity * 0.2; //* 0.1
 	double playerAngle = 0;
+	double playerXfriction = 0.9;
+	double playerXspeed = 80000;
 	double playerAngleMultiplier = 0.05;
 	bool playerInitialJump  = false;
 	bool playerJumpedLastTime = false;
@@ -121,7 +123,7 @@ int main()
 	bool playerNameTextCursorBlinkToggle = false;
 
 	//player settings...?
-	bool displayHitboxes = false;
+	bool displayHitboxes = true;
 	double sfxVolume = 50;
 	//double musicVolume = 100;
 
@@ -209,6 +211,17 @@ int main()
 	sf::RectangleShape floor(sf::Vector2f(screenWidth, screenHeight * 0.1));
 	floor.setPosition(0, screenHeight - floor.getLocalBounds().height);
 	floor.setFillColor(sf::Color::Cyan);
+
+	//leftWall
+	const int leftWallThickness = 10;
+	sf::RectangleShape leftWall(sf::Vector2f(leftWallThickness, screenHeight));
+	leftWall.setFillColor(sf::Color::Cyan);
+
+	//rightWall
+	const int rightWallThickness = 10;
+	sf::RectangleShape rightWall(sf::Vector2f(rightWallThickness, screenHeight));
+	rightWall.setPosition(screenWidth - rightWallThickness, 0);
+	rightWall.setFillColor(sf::Color::Cyan);
 	
 	//score
 	sf::Text currentScoreText;
@@ -892,6 +905,8 @@ int main()
 			{
 				window.draw(ceiling);
 				window.draw(floor);
+				window.draw(leftWall);
+				window.draw(rightWall);
 				window.draw(playerHitbox);
 			}
 
@@ -1040,9 +1055,30 @@ int main()
 				}
 			}
 
+			if(playerInitialJump)
+			{
+				if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+				{
+					playerXvelocity += -1 * playerXspeed * deltaTime.count();
+				} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right) || sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+				{
+					playerXvelocity += playerXspeed * deltaTime.count();
+				}
+			}
+
+			if(playerHitbox.getGlobalBounds().intersects(leftWall.getGlobalBounds()))
+			{
+				playerXvelocity = 100;
+			} else if(playerHitbox.getGlobalBounds().intersects(rightWall.getGlobalBounds()))
+			{
+				playerXvelocity = -100;
+			}
+
 			//update player
 			playerY += playerYvelocity * deltaTime.count();
 			playerX += playerXvelocity * deltaTime.count();
+			
+			playerXvelocity *= playerXfriction * deltaTime.count();
 
 			playerAngle = playerYvelocity * -1 * playerAngleMultiplier;
 
@@ -1086,6 +1122,8 @@ int main()
 			{
 				window.draw(ceiling);
 				window.draw(floor);
+				window.draw(leftWall);
+				window.draw(rightWall);
 				window.draw(playerHitbox);
 			}
 
