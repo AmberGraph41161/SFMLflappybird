@@ -3,6 +3,8 @@
 #include <ctime>
 #include <chrono>
 #include <vector>
+#include <filesystem>
+
 #include <SFML/Window/Keyboard.hpp>
 #include <SFML/Window/VideoMode.hpp>
 #include <SFML/System/Vector2.hpp>
@@ -37,6 +39,9 @@ int main()
 	const int captureTextInputEventAsciiDelete = 127;
 	bool captureTextInputEvents = false;
 	std::string capturedTextInput = "";
+
+	std::chrono::duration<double> captureTextInputEventBackspaceTickDelta = std::chrono::seconds::zero();
+	double captureTextInputEventBackspaceTickDeltaThreshold = 0.1;
 
 	//load player stuff
 	sf::Sprite player;
@@ -74,10 +79,16 @@ int main()
 	bool settingsMenu = false;
 	
 	int playerCurrentScore = 0; //(current score, during live gameplay and not saved score(s))
-	
+
+	//make sure "dat/" exists. if not, create it
+	if(!std::filesystem::exists("dat"))
+	{
+		std::filesystem::create_directory("dat");
+	}
 	std::map<std::string, int> playerScores;
 	getSavedScores(playerScores);
 	std::string playerName = getSavedPlayerName();
+	int playerNameCharacterLengthThreshold = 30;
 
 	//displaying playerName
 	sf::Text playerNameText;
@@ -98,6 +109,16 @@ int main()
 	playerNameText.setCharacterSize(playerNameTextCharacterSize);
 	playerNameText.setPosition(0 + playerNameTextLeftMarigin, 0 + playerNameTextTopMarigin);
 	playerNameText.setString(playerName);
+
+	//playerNameTextCursor
+	sf::RectangleShape playerNameTextCursor(sf::Vector2f(2, playerNameText.getGlobalBounds().height));
+	const int playerNameTextCursorLeftMarigin = playerNameTextLeftMarigin + 10;
+	const int playerNameTextCursorTopMarigin = playerNameTextTopMarigin;
+	playerNameTextCursor.setOrigin(playerNameTextCursor.getLocalBounds().width / 2, playerNameTextCursor.getLocalBounds().height / 2);
+	playerNameTextCursor.setPosition(playerNameText.getGlobalBounds().width + playerNameTextCursorLeftMarigin, playerNameTextCursorTopMarigin);
+	std::chrono::duration<double> playerNameTextCursorBlinkTickDelta = std::chrono::seconds::zero();
+	double playerNameTextCursorBlinkTickDeltaThreshold = 0.7;
+	bool playerNameTextCursorBlinkToggle = false;
 
 	//player settings...?
 	bool displayHitboxes = false;
@@ -464,8 +485,6 @@ int main()
 			{
 				if(captureTextInputEvents)
 				{
-					std::cout << event.text.unicode << std::endl;
-
 					//wtf ugly. fix later. Tuesday, November 26, 2024, 14:26:10
 					if(
 						event.text.unicode >= captureTextInputEventAsciiLowerBound &&
@@ -496,6 +515,25 @@ int main()
 				}
 			}
 		}
+
+		if(captureTextInputEvents)
+		{
+			if(captureTextInputEventBackspaceTickDelta.count() >= captureTextInputEventBackspaceTickDeltaThreshold)
+			{
+				if(capturedTextInput.size() > 0)
+				{
+					capturedTextInput.pop_back();
+				}
+				captureTextInputEventBackspaceTickDelta = std::chrono::seconds::zero();
+			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::BackSpace))
+			{
+				captureTextInputEventBackspaceTickDelta += deltaTime;
+			} else
+			{
+				captureTextInputEventBackspaceTickDelta = std::chrono::seconds::zero();
+			}
+		}
+
 		if(sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
 		{
 			window.close();
@@ -504,22 +542,10 @@ int main()
 		//startscreen and or pause menu
 		if(startMenu)
 		{
-			//draw and deltaTime
-			lastlastframe = std::chrono::high_resolution_clock::now();
-			window.clear(sf::Color::Black);
-			
-			//update background
-			if(background.getPosition().x <= backgroundOriginalX - (background.getGlobalBounds().width / backgroundTextureMultiplier))
-			{
-				background.setPosition(backgroundOriginalX, backgroundOriginalY);
-			}
-			background.move(-1 * backgroundSpeed * deltaTime.count(), 0);
-			window.draw(background);
-
 			//playerNameText logic
 			if(playerNameText.getGlobalBounds().contains(window.mapPixelToCoords(sf::Mouse::getPosition(window), view)))
 			{
-				if(!playerNameTextHoveredOver)
+				if(!playerNameTextHoveredOver && !playerNameTextClicked)
 				{
 					playerNameText.setCharacterSize(playerNameTextCharacterSize + 10);
 					menu0SFX.play();
@@ -534,12 +560,12 @@ int main()
 						playerNameTextClicked = true;
 						captureTextInputEvents = true;
 						playerNameTextSavedToFile = false;
+						playerNameText.setFillColor(sf::Color(200, 230, 255, 255));
 					}
 				}
 			} else
 			{
 				playerNameTextHoveredOver = false;
-				playerNameTextClicked = false;
 
 				if(!playerNameTextHoveredOver)
 				{
@@ -550,6 +576,12 @@ int main()
 			if(captureTextInputEvents)
 			{
 				playerName = capturedTextInput;
+				if(playerName.size() >= playerNameCharacterLengthThreshold)
+				{
+					playerName = playerName.substr(0, playerNameCharacterLengthThreshold);
+					capturedTextInput = playerName;
+				}
+
 				playerNameText.setString(playerName);
 			} else if(!playerNameTextSavedToFile)
 			{
@@ -562,6 +594,9 @@ int main()
 				}
 				savePlayerName(playerName);
 				playerNameTextSavedToFile = true;
+				playerNameTextClicked = false;
+
+				playerNameText.setFillColor(sf::Color::White);
 			}
 
 			//startButton logic
@@ -578,7 +613,7 @@ int main()
 
 				if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
 				{
-					if(!startButtonClicked && !viewHighscoresButtonClicked)
+					if(!startButtonClicked && !viewHighscoresButtonClicked && !playerNameTextClicked)
 					{
 						startButtonClicked = true;
 						menu1SFX.play();
@@ -630,7 +665,7 @@ int main()
 
 				if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
 				{
-					if(!viewHighscoresButtonClicked && !startButtonClicked)
+					if(!viewHighscoresButtonClicked && !startButtonClicked && !playerNameTextClicked)
 					{
 						viewHighscoresButtonClicked = true;
 						menu1SFX.play();
@@ -677,7 +712,43 @@ int main()
 					viewHighscoresButton.setTextureRect(spriteSheetFrame(viewHighscoresButtonFrameWidth, viewHighscoresButtonFrameHeight, 2 + (viewHighscoresButtonFlashAnimationCount % 2)));
 				}
 			}
+			
+			//draw and deltaTime
+			lastlastframe = std::chrono::high_resolution_clock::now();
+			window.clear(sf::Color::Black);
+			
+			//update background
+			if(background.getPosition().x <= backgroundOriginalX - (background.getGlobalBounds().width / backgroundTextureMultiplier))
+			{
+				background.setPosition(backgroundOriginalX, backgroundOriginalY);
+			}
+			background.move(-1 * backgroundSpeed * deltaTime.count(), 0);
+			window.draw(background);
 
+			if(playerNameTextClicked)
+			{
+				playerNameTextCursor.setPosition(playerNameText.getGlobalBounds().width + playerNameTextCursorLeftMarigin, playerNameTextCursorTopMarigin);
+				
+				if(playerNameTextCursorBlinkTickDelta.count() >= playerNameTextCursorBlinkTickDeltaThreshold)
+				{
+					playerNameTextCursorBlinkTickDelta = std::chrono::seconds::zero();
+					if(playerNameTextCursorBlinkToggle)
+					{
+						playerNameTextCursorBlinkToggle = false;
+					} else
+					{
+						playerNameTextCursorBlinkToggle = true;
+					}
+				} else
+				{
+					playerNameTextCursorBlinkTickDelta += deltaTime;
+				}
+			}
+
+			if(playerNameTextCursorBlinkToggle)
+			{
+				window.draw(playerNameTextCursor);
+			}
 			window.draw(playerNameText);
 			window.draw(startButton);
 			window.draw(viewHighscoresButton);
