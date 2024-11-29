@@ -2,6 +2,8 @@
 #define PIPE_HPP
 
 #include <SFML/Graphics.hpp>
+#include <SFML/Graphics/RectangleShape.hpp>
+#include <SFML/System/Vector2.hpp>
 
 class Pipe
 {
@@ -21,9 +23,14 @@ public:
 	sf::Sprite getTopPipe();
 	sf::Sprite getBottomPipe();
 
+	sf::RectangleShape getTopPipeHitbox();
+	sf::RectangleShape getBottomPipeHitbox();
+
 private:
 	sf::Sprite topPipe;
 	sf::Sprite bottomPipe; //is the "mother pipe" or the "master pipe". topPipe will be relative to bottomPipe
+	sf::RectangleShape topPipeHitbox;
+	sf::RectangleShape bottomPipeHitbox;
 
 	sf::Texture* texture;
 	double x, y;

@@ -894,6 +894,12 @@ int main()
 			{
 				window.draw(pipes[x].getTopPipe());
 				window.draw(pipes[x].getBottomPipe());
+				
+				if(displayHitboxes)
+				{
+					window.draw(pipes[x].getTopPipeHitbox());
+					window.draw(pipes[x].getBottomPipeHitbox());
+				}
 			}
 
 			for(int x = 0; x < missiles.size(); x++)
@@ -1185,6 +1191,12 @@ int main()
 
 				window.draw(pipes[x].getTopPipe());
 				window.draw(pipes[x].getBottomPipe());
+
+				if(displayHitboxes)
+				{
+					window.draw(pipes[x].getTopPipeHitbox());
+					window.draw(pipes[x].getBottomPipeHitbox());
+				}
 			}
 
 			//update missiles stuff
