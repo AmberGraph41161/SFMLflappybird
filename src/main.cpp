@@ -123,7 +123,7 @@ int main()
 	bool playerNameTextCursorBlinkToggle = false;
 
 	//player settings...?
-	bool displayHitboxes = true;
+	bool displayHitboxes = false;
 	double sfxVolume = 50;
 	//double musicVolume = 100;
 
@@ -157,7 +157,8 @@ int main()
 
 	//load pipe stuff pipes
 	sf::Texture pipeTexture;
-	std::string pipeTexturePath = "resources/textures/longpipe.png";
+	//std::string pipeTexturePath = "resources/textures/longpipe.png";
+	std::string pipeTexturePath = "resources/textures/christmaslongpipe.png";
 	if(!pipeTexture.loadFromFile(pipeTexturePath))
 	{
 		std::cerr << "failed to load \"" << pipeTexturePath << "\"" << std::endl;
@@ -172,7 +173,8 @@ int main()
 
 	//load missile stuff
 	sf::Texture missileTexture;
-	std::string missileTexturePath = "resources/textures/missile-Sheet.png";
+	//std::string missileTexturePath = "resources/textures/missile-Sheet.png";
+	std::string missileTexturePath = "resources/textures/christmasmissile-Sheet.png";
 	if(!missileTexture.loadFromFile(missileTexturePath))
 	{
 		std::cerr << "Failed to load \"" << missileTexturePath << "\"" << std::endl;
@@ -185,7 +187,8 @@ int main()
 	//load background and flooring stuff
 	sf::Sprite background;
 	sf::Texture backgroundTexture;
-	std::string backgroundTexturePath = "resources/textures/slicebackground.png";
+	//std::string backgroundTexturePath = "resources/textures/slicebackground.png";
+	std::string backgroundTexturePath = "resources/textures/christmasslicebackground1.png";
 	if(!backgroundTexture.loadFromFile(backgroundTexturePath))
 	{
 		std::cerr << "failed to load \"" << backgroundTexturePath << "\"" << std::endl;
@@ -326,7 +329,7 @@ int main()
 	playAgainButton.setPosition(screenWidth / 2, screenHeight / 2);
 
 	//dimscreen rectangleshape object for death menu, pause menu, etc, etc
-	int dimScreenShapeDefaultDim = 200;
+	const int dimScreenShapeDefaultDim = 200;
 	sf::RectangleShape dimScreenShape(sf::Vector2f(screenWidth, screenHeight));
 	dimScreenShape.setFillColor(sf::Color(0, 0, 0, dimScreenShapeDefaultDim));
 	sf::Text dimScreenText;
