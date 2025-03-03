@@ -76,7 +76,7 @@ mv SFMLflappybird ../ && cd ..
 1. if your distro's repos have SFML, install SFML dependency with package manger.
 on arch linux (and any other arch-based distro), do:
 ```shell
-sudo pacman -S sfml
+sudo pacman -Sy sfml
 ```
 
 2. clone the git repo and cd into it
