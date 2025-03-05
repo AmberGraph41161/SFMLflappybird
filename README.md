@@ -33,7 +33,7 @@ Dependencies:
 
 > make >= 4.4.1
 
-> libsfml >= 2.6.1
+> libsfml >= 2.6.1 && < 3.0.0 (SFML version 3.0.0 deprecates openAL dependency. Installation instructions here are not up to date with changes to miniAudio)
 
 > clang >= 18.1.8
 >  
