@@ -8,7 +8,7 @@
 class Pipe
 {
 public:
-	Pipe(sf::Texture* pipeTexture, double startX, double startY, double pipeSpacing, double pipeSpeed);
+	Pipe(sf::Texture &pipeTexture, double startX, double startY, double pipeSpacing, double pipeSpeed);
 	~Pipe();
 
 	void move(double deltaTime);
@@ -32,7 +32,6 @@ private:
 	sf::RectangleShape topPipeHitbox;
 	sf::RectangleShape bottomPipeHitbox;
 
-	sf::Texture* texture;
 	double x, y;
 	double spacing = 0;
 	double speed = 500; //1
@@ -43,8 +42,8 @@ private:
 
 //non class functions...
 
-void spawnDefaultRandomPipe(std::vector<Pipe> &pipes, sf::Texture *pipeTexture, double screenWidth, double screenHeight);
-void pipeTunnel(std::vector<Pipe> &pipes, sf::Texture *pipeTexture, int nPipes, double startX, double startY, double pipeSpacing = 120, double pipeSpeed = 500, double pipeXspacing = 200);
-void pipeShrinkTunnel(std::vector<Pipe> &pipes, sf::Texture *pipeTexture, int nPipes, double startX, double startY, double pipeSpacing = 250, double pipeSpeed = 500, double pipeXspacing = 100);
+void spawnDefaultRandomPipe(std::vector<Pipe> &pipes, sf::Texture &pipeTexture, double screenWidth, double screenHeight);
+void pipeTunnel(std::vector<Pipe> &pipes, sf::Texture &pipeTexture, int nPipes, double startX, double startY, double pipeSpacing = 120, double pipeSpeed = 500, double pipeXspacing = 200);
+void pipeShrinkTunnel(std::vector<Pipe> &pipes, sf::Texture &pipeTexture, int nPipes, double startX, double startY, double pipeSpacing = 250, double pipeSpeed = 500, double pipeXspacing = 100);
 
 #endif

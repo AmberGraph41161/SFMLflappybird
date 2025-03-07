@@ -9,7 +9,7 @@
 class Missile
 {
 public:
-	Missile(sf::Texture* missileTexture, double spawnX, double spawnY, double missileSpeed, sf::Sound *droppingSFX, sf::Sound *launchingSFX);
+	Missile(sf::Texture &missileTexture, double spawnX, double spawnY, double missileSpeed, sf::Sound *droppingSFX, sf::Sound *launchingSFX);
 	~Missile();
 	void move(double deltaTime);
 	bool isOffScreen(double left, double width, double top, double height);
@@ -22,7 +22,6 @@ public:
 
 private:
 	sf::Sprite missile;
-	sf::Texture* texture;
 
 	int missileFrameWidth = 123;
 	int missileFrameHeight = 36;

@@ -32,7 +32,10 @@ void SLEEP(double seconds)
 
 sf::IntRect spriteSheetFrame(int spriteFrameWidth, int spriteFrameHeight, int frameNumber) //this is only for sprite sheet left to right horiztonal etc etc
 {
-	return sf::IntRect(frameNumber * spriteFrameWidth, 0, spriteFrameWidth, spriteFrameHeight); //x, y, width, height
+	return sf::IntRect(
+		sf::Vector2i(frameNumber * spriteFrameWidth, 0),
+		sf::Vector2i(spriteFrameWidth, spriteFrameHeight)
+	); //x, y, width, height
 }
 
 //playerName.txt file format:

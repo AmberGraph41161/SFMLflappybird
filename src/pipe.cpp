@@ -6,25 +6,22 @@
 
 #include "gamefunctions.hpp"
 
-Pipe::Pipe(sf::Texture* pipeTexture, double startX, double startY, double pipeSpacing, double pipeSpeed)
-	: texture(pipeTexture), x(startX), y(startY), spacing(pipeSpacing), speed(pipeSpeed)
+Pipe::Pipe(sf::Texture &pipeTexture, double startX, double startY, double pipeSpacing, double pipeSpeed)
+	: x(startX), y(startY), spacing(pipeSpacing), speed(pipeSpeed), topPipe(pipeTexture), bottomPipe(pipeTexture)
 {
-	topPipe.setTexture(*texture);
-	bottomPipe.setTexture(*texture);
+	topPipe.rotate(sf::Angle(sf::degrees(180)));
+	topPipe.setOrigin(sf::Vector2f(topPipe.getLocalBounds().size.x / 2, topPipe.getLocalBounds().position.y));
+	bottomPipe.setOrigin(sf::Vector2f(bottomPipe.getLocalBounds().size.x / 2, bottomPipe.getLocalBounds().position.y));
 
-	topPipe.rotate(180);
-	topPipe.setOrigin(topPipe.getLocalBounds().width / 2, topPipe.getLocalBounds().top);
-	bottomPipe.setOrigin(bottomPipe.getLocalBounds().width / 2, bottomPipe.getLocalBounds().top);
-
-	topPipeHitbox = sf::RectangleShape(sf::Vector2f(topPipe.getLocalBounds().width - 4, topPipe.getLocalBounds().height));
-	bottomPipeHitbox = sf::RectangleShape(sf::Vector2f(bottomPipe.getLocalBounds().width - 4, bottomPipe.getLocalBounds().height));
-	topPipeHitbox.rotate(180);
+	topPipeHitbox = sf::RectangleShape(sf::Vector2f(topPipe.getLocalBounds().size.x - 4, topPipe.getLocalBounds().size.y));
+	bottomPipeHitbox = sf::RectangleShape(sf::Vector2f(bottomPipe.getLocalBounds().size.x - 4, bottomPipe.getLocalBounds().size.y));
+	topPipeHitbox.rotate(sf::Angle(sf::degrees(180)));
 
 	topPipeHitbox.setFillColor(sf::Color::Cyan);
 	bottomPipeHitbox.setFillColor(sf::Color::Cyan);
 	
-	topPipeHitbox.setOrigin(topPipeHitbox.getLocalBounds().width / 2, topPipeHitbox.getLocalBounds().top);
-	bottomPipeHitbox.setOrigin(bottomPipeHitbox.getLocalBounds().width / 2, bottomPipeHitbox.getLocalBounds().top);
+	topPipeHitbox.setOrigin(sf::Vector2f(topPipeHitbox.getLocalBounds().size.x / 2, topPipeHitbox.getLocalBounds().position.y));
+	bottomPipeHitbox.setOrigin(sf::Vector2f(bottomPipeHitbox.getLocalBounds().size.x / 2, bottomPipeHitbox.getLocalBounds().position.y));
 
 	topPipe.setScale(sf::Vector2f(defaultPipeScale, defaultPipeScale));
 	bottomPipe.setScale(sf::Vector2f(defaultPipeScale, defaultPipeScale));
@@ -32,8 +29,8 @@ Pipe::Pipe(sf::Texture* pipeTexture, double startX, double startY, double pipeSp
 	topPipeHitbox.setScale(sf::Vector2f(defaultPipeScale, defaultPipeScale));
 	bottomPipeHitbox.setScale(sf::Vector2f(defaultPipeScale, defaultPipeScale));
 
-	topPipe.setPosition(x, y - spacing);
-	bottomPipe.setPosition(x, y + spacing);
+	topPipe.setPosition(sf::Vector2f(x, y - spacing));
+	bottomPipe.setPosition(sf::Vector2f(x, y + spacing));
 	
 	topPipeHitbox.setPosition(topPipe.getPosition());
 	bottomPipeHitbox.setPosition(bottomPipe.getPosition());
@@ -47,8 +44,8 @@ void Pipe::move(double deltaTime)
 {
 	x -= speed * deltaTime;
 
-	topPipe.setPosition(x, y - spacing);
-	bottomPipe.setPosition(x, y + spacing);
+	topPipe.setPosition(sf::Vector2f(x, y - spacing));
+	bottomPipe.setPosition(sf::Vector2f(x, y + spacing));
 
 	topPipeHitbox.setPosition(topPipe.getPosition());
 	bottomPipeHitbox.setPosition(bottomPipe.getPosition());
@@ -59,8 +56,8 @@ void Pipe::setPosition(double X, double Y)
 	x = X;
 	y = Y;
 
-	topPipe.setPosition(x, y - spacing);
-	bottomPipe.setPosition(x, y + spacing);
+	topPipe.setPosition(sf::Vector2f(x, y - spacing));
+	bottomPipe.setPosition(sf::Vector2f(x, y + spacing));
 	
 	topPipeHitbox.setPosition(topPipe.getPosition());
 	bottomPipeHitbox.setPosition(bottomPipe.getPosition());
@@ -118,7 +115,10 @@ bool Pipe::hasPastPlayer()
 
 bool Pipe::intersects(sf::FloatRect objectGlobalBounds)
 {
-	if(topPipeHitbox.getGlobalBounds().intersects(objectGlobalBounds) || bottomPipeHitbox.getGlobalBounds().intersects(objectGlobalBounds))
+	if(
+		topPipeHitbox.getGlobalBounds().findIntersection(objectGlobalBounds).has_value() ||
+		bottomPipeHitbox.getGlobalBounds().findIntersection(objectGlobalBounds).has_value()
+	)
 	{
 		return true;
 	}
@@ -147,12 +147,12 @@ sf::RectangleShape Pipe::getBottomPipeHitbox()
 
 //non class functions...
 
-void spawnDefaultRandomPipe(std::vector<Pipe> &pipes, sf::Texture *pipeTexture, double screenWidth, double screenHeight)
+void spawnDefaultRandomPipe(std::vector<Pipe> &pipes, sf::Texture &pipeTexture, double screenWidth, double screenHeight)
 {
 	pipes.emplace_back(Pipe(pipeTexture, screenWidth + RANDOM(0, 500), RANDOMDOUBLE((screenHeight / 2) - 200, (screenHeight / 2) + 200), RANDOMDOUBLE(70, 200), RANDOMDOUBLE(300, 700)));
 }
 
-void pipeTunnel(std::vector<Pipe> &pipes, sf::Texture *pipeTexture, int nPipes, double startX, double startY, double pipeSpacing, double pipeSpeed, double pipeXspacing)
+void pipeTunnel(std::vector<Pipe> &pipes, sf::Texture &pipeTexture, int nPipes, double startX, double startY, double pipeSpacing, double pipeSpeed, double pipeXspacing)
 {
 	for(int x = 0; x < nPipes; x++)
 	{
@@ -160,7 +160,7 @@ void pipeTunnel(std::vector<Pipe> &pipes, sf::Texture *pipeTexture, int nPipes, 
 	}
 }
 
-void pipeShrinkTunnel(std::vector<Pipe> &pipes, sf::Texture *pipeTexture, int nPipes, double startX, double startY, double pipeSpacing, double pipeSpeed, double pipeXspacing)
+void pipeShrinkTunnel(std::vector<Pipe> &pipes, sf::Texture &pipeTexture, int nPipes, double startX, double startY, double pipeSpacing, double pipeSpeed, double pipeXspacing)
 {
 	for(int x = 0; x < nPipes; x++)
 	{

@@ -7,20 +7,19 @@
 
 #include "gamefunctions.hpp"
 
-Missile::Missile(sf::Texture* missileTexture, double spawnX, double spawnY, double missileSpeed, sf::Sound *droppingSFX, sf::Sound *launchingSFX)
-	: texture(missileTexture), x(spawnX), y(spawnY), speed(missileSpeed), droppingSFX(droppingSFX), launchingSFX(launchingSFX)
+Missile::Missile(sf::Texture &missileTexture, double spawnX, double spawnY, double missileSpeed, sf::Sound *droppingSFX, sf::Sound *launchingSFX)
+	: x(spawnX), y(spawnY), speed(missileSpeed), droppingSFX(droppingSFX), launchingSFX(launchingSFX), missile(missileTexture)
 {
 	spawnAnimationOriginalY = y;
 	y -= spawnAnimationHeightSpacing;
 
-	missile.setTexture(*texture);
 	missile.setTextureRect(spriteSheetFrame(missileFrameWidth, missileFrameHeight, 0));
-	missile.setOrigin(missile.getLocalBounds().width / 2, missile.getLocalBounds().height / 2);
+	missile.setOrigin(sf::Vector2f(missile.getLocalBounds().size.x / 2, missile.getLocalBounds().size.y / 2));
 	missile.setScale(sf::Vector2f(2, 2));
 
 	//(68 / 123) --> width of missile sprite in pixels excluding fire pixels
-	hitbox = sf::RectangleShape(sf::Vector2f((missile.getGlobalBounds().width / 123) * 60, missile.getGlobalBounds().height / 2));
-	hitbox.setOrigin(hitbox.getLocalBounds().width / 2, hitbox.getLocalBounds().height / 2);
+	hitbox = sf::RectangleShape(sf::Vector2f((missile.getGlobalBounds().size.x / 123) * 60, missile.getGlobalBounds().size.y / 2));
+	hitbox.setOrigin(sf::Vector2f(hitbox.getLocalBounds().size.x / 2, hitbox.getLocalBounds().size.y / 2));
 	hitbox.setFillColor(sf::Color::Cyan);
 }
 
@@ -72,9 +71,9 @@ void Missile::move(double deltaTime)
 		}
 	}
 
-	missile.setPosition(x, y);
+	missile.setPosition(sf::Vector2f(x, y));
 	hitbox.setPosition(missile.getPosition());
-	hitbox.move(hitboxXoffset, 0);
+	hitbox.move(sf::Vector2f(hitboxXoffset, 0));
 }
 
 bool Missile::isOffScreen(double left, double width, double top, double height)

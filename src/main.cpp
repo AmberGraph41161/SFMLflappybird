@@ -1,3 +1,9 @@
+//as of Thursday, March 06, 2025, 21:57:15
+//start SFML 2.x to SFML 3.x migration...
+	//https://www.sfml-dev.org/tutorials/3.0/getting-started/migrate/#fixed-width-integers
+//finally finished SFML 2.x to SFML 3.x migration as of Thursday, March 06, 2025, 23:10:28
+
+#include <SFML/System/Angle.hpp>
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
@@ -44,7 +50,6 @@ int main()
 	double captureTextInputEventBackspaceTickDeltaThreshold = 0.1;
 
 	//load player stuff
-	sf::Sprite player;
 	sf::Texture playerTexture;
 	std::string playerTexturePath = "resources/textures/flappybird.png";
 	if(!playerTexture.loadFromFile(playerTexturePath))
@@ -52,12 +57,12 @@ int main()
 		std::cerr << "failed to load \"" << playerTexturePath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-
+	sf::Sprite player(playerTexture);
+	
 	const sf::Vector2f playerScale(4, 4);
-
-	player.setTexture(playerTexture);
-	player.setOrigin(player.getLocalBounds().width / 2, player.getLocalBounds().height / 2);
+	player.setOrigin(sf::Vector2f(player.getLocalBounds().size.x / 2, player.getLocalBounds().size.y / 2));
 	player.setScale(playerScale);
+
 
 	double defaultPlayerX = screenWidth / 4;
 	double defaultPlayerY = screenHeight / 2;
@@ -93,10 +98,9 @@ int main()
 	int playerNameCharacterLengthThreshold = 30;
 
 	//displaying playerName
-	sf::Text playerNameText;
 	sf::Font masterFont;
 	std::string masterFontPath = "resources/fonts/Minecraftia-Regular.ttf";
-	if(!masterFont.loadFromFile(masterFontPath))
+	if(!masterFont.openFromFile(masterFontPath))
 	{
 		std::cout << "failed to load\"" << masterFontPath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
@@ -107,17 +111,17 @@ int main()
 	bool playerNameTextHoveredOver = false;
 	bool playerNameTextClicked = false;
 	bool playerNameTextSavedToFile = true;
-	playerNameText.setFont(masterFont);
+	sf::Text playerNameText(masterFont);
 	playerNameText.setCharacterSize(playerNameTextCharacterSize);
-	playerNameText.setPosition(0 + playerNameTextLeftMarigin, 0 + playerNameTextTopMarigin);
+	playerNameText.setPosition(sf::Vector2f(0 + playerNameTextLeftMarigin, 0 + playerNameTextTopMarigin));
 	playerNameText.setString(playerName);
 
 	//playerNameTextCursor
-	sf::RectangleShape playerNameTextCursor(sf::Vector2f(2, playerNameText.getGlobalBounds().height));
+	sf::RectangleShape playerNameTextCursor(sf::Vector2f(2, playerNameText.getGlobalBounds().size.y));
 	const int playerNameTextCursorLeftMarigin = playerNameTextLeftMarigin + 10;
 	const int playerNameTextCursorTopMarigin = playerNameTextTopMarigin;
-	playerNameTextCursor.setOrigin(playerNameTextCursor.getLocalBounds().width / 2, playerNameTextCursor.getLocalBounds().height / 2);
-	playerNameTextCursor.setPosition(playerNameText.getGlobalBounds().width + playerNameTextCursorLeftMarigin, playerNameTextCursorTopMarigin);
+	playerNameTextCursor.setOrigin(sf::Vector2f(playerNameTextCursor.getLocalBounds().size.x / 2, playerNameTextCursor.getLocalBounds().size.y / 2));
+	playerNameTextCursor.setPosition(sf::Vector2f(playerNameText.getGlobalBounds().size.x + playerNameTextCursorLeftMarigin, playerNameTextCursorTopMarigin));
 	std::chrono::duration<double> playerNameTextCursorBlinkTickDelta = std::chrono::seconds::zero();
 	double playerNameTextCursorBlinkTickDeltaThreshold = 0.7;
 	bool playerNameTextCursorBlinkToggle = false;
@@ -128,13 +132,12 @@ int main()
 	//double musicVolume = 100;
 
 	//player hitbox?
-	sf::RectangleShape playerHitbox(sf::Vector2f(player.getGlobalBounds().width * 0.5, player.getGlobalBounds().height * 0.7));
-	playerHitbox.setOrigin(playerHitbox.getLocalBounds().width / 2, playerHitbox.getLocalBounds().height / 2);
-	playerHitbox.setPosition(playerX, playerY);
+	sf::RectangleShape playerHitbox(sf::Vector2f(player.getGlobalBounds().size.x * 0.5, player.getGlobalBounds().size.y * 0.7));
+	playerHitbox.setOrigin(sf::Vector2f(playerHitbox.getLocalBounds().size.x / 2, playerHitbox.getLocalBounds().size.y / 2));
+	playerHitbox.setPosition(sf::Vector2f(playerX, playerY));
 	playerHitbox.setFillColor(sf::Color::Red);
 
 	//player jump indicator
-	sf::Sprite playerJumpIndicator;
 	sf::Texture playerJumpIndicatorTexture;
 	std::string playerJumpIndicatorTexturePath = "resources/textures/jumpindicator-Sheet.png";
 	if(!playerJumpIndicatorTexture.loadFromFile(playerJumpIndicatorTexturePath))
@@ -142,15 +145,16 @@ int main()
 		std::cerr << "failed to load \"" << playerJumpIndicatorTexturePath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	sf::Sprite playerJumpIndicator(playerJumpIndicatorTexture);
 	const int playerJumpIndicatorFrameWidth = 25;
 	const int playerJumpIndicatorFrameHeight = 37;
 	const double playerJumpIndicatorYoffsetFix = -18;
 
 	playerJumpIndicator.setTexture(playerJumpIndicatorTexture);
 	playerJumpIndicator.setTextureRect(spriteSheetFrame(playerJumpIndicatorFrameWidth, playerJumpIndicatorFrameHeight, 0));
-	playerJumpIndicator.setOrigin(playerJumpIndicator.getLocalBounds().width / 2, playerJumpIndicator.getLocalBounds().height / 2);
+	playerJumpIndicator.setOrigin(sf::Vector2f(playerJumpIndicator.getLocalBounds().size.x / 2, playerJumpIndicator.getLocalBounds().size.y / 2));
 	playerJumpIndicator.setScale(playerScale);
-	playerJumpIndicator.setPosition(playerX, playerY + playerJumpIndicatorYoffsetFix);
+	playerJumpIndicator.setPosition(sf::Vector2f(playerX, playerY + playerJumpIndicatorYoffsetFix));
 	
 	std::chrono::duration<double> animatePlayerJumpIndicatorDuration = std::chrono::seconds::zero();
 	double animatePlayerJumpIndicatorDurationThreshold = 0.4;
@@ -169,7 +173,7 @@ int main()
 	double defaultPipeSpeed = 500; //0.2
 	bool pipesSubroutine = false;
 
-	pipes.emplace_back(Pipe(&pipeTexture, screenWidth - 100, screenHeight / 2, defaultPipeSpacing, defaultPipeSpeed));
+	pipes.emplace_back(Pipe(pipeTexture, screenWidth - 100, screenHeight / 2, defaultPipeSpacing, defaultPipeSpeed));
 
 	//load missile stuff
 	sf::Texture missileTexture;
@@ -185,7 +189,6 @@ int main()
 	//missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3, screenHeight / 2, defaultMissileSpeed));
 
 	//load background and flooring stuff
-	sf::Sprite background;
 	sf::Texture backgroundTexture;
 	//std::string backgroundTexturePath = "resources/textures/slicebackground.png";
 	std::string backgroundTexturePath = "resources/textures/christmasslicebackground1.png";
@@ -194,14 +197,15 @@ int main()
 		std::cerr << "failed to load \"" << backgroundTexturePath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	sf::Sprite background(backgroundTexture);
 	const sf::Vector2f backgroundScale(7.5, 7.5);
 	int backgroundTextureMultiplier = 8;
 	backgroundTexture.setRepeated(true);
-	background.setTextureRect(sf::IntRect(0, 0, backgroundTexture.getSize().x * backgroundTextureMultiplier, backgroundTexture.getSize().y));
+	background.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(backgroundTexture.getSize().x * backgroundTextureMultiplier, backgroundTexture.getSize().y)));
 	background.setTexture(backgroundTexture);
 	background.setScale(backgroundScale);
-	background.setOrigin(background.getLocalBounds().width / 2, background.getLocalBounds().height / 2);
-	background.setPosition(screenWidth / 2, screenHeight / 2);
+	background.setOrigin(sf::Vector2f(background.getLocalBounds().size.x / 2, background.getLocalBounds().size.y / 2));
+	background.setPosition(sf::Vector2f(screenWidth / 2, screenHeight / 2));
 	double backgroundOriginalX = background.getPosition().x;
 	double backgroundOriginalY = background.getPosition().y;
 	double backgroundSpeed = 50;
@@ -212,7 +216,7 @@ int main()
 
 	//floor
 	sf::RectangleShape floor(sf::Vector2f(screenWidth, screenHeight * 0.1));
-	floor.setPosition(0, screenHeight - floor.getLocalBounds().height);
+	floor.setPosition(sf::Vector2f(0, screenHeight - floor.getLocalBounds().size.y));
 	floor.setFillColor(sf::Color::Cyan);
 
 	//leftWall
@@ -223,21 +227,19 @@ int main()
 	//rightWall
 	const int rightWallThickness = 10;
 	sf::RectangleShape rightWall(sf::Vector2f(rightWallThickness, screenHeight));
-	rightWall.setPosition(screenWidth - rightWallThickness, 0);
+	rightWall.setPosition(sf::Vector2f(screenWidth - rightWallThickness, 0));
 	rightWall.setFillColor(sf::Color::Cyan);
 	
 	//score
-	sf::Text currentScoreText;
 	const sf::Vector2f scoreTextScale(1, 1);
-	currentScoreText.setFont(masterFont);
+	sf::Text currentScoreText(masterFont);
 	currentScoreText.setCharacterSize(50);
 	currentScoreText.setScale(scoreTextScale);
 	currentScoreText.setString(std::to_string(playerCurrentScore));
-	currentScoreText.setOrigin(currentScoreText.getLocalBounds().width / 2, currentScoreText.getLocalBounds().height / 2);
-	currentScoreText.setPosition(screenWidth / 2, screenHeight / 10);
+	currentScoreText.setOrigin(sf::Vector2f(currentScoreText.getLocalBounds().size.x / 2, currentScoreText.getLocalBounds().size.y / 2));
+	currentScoreText.setPosition(sf::Vector2f(screenWidth / 2, screenHeight / 10));
 	
 	//start menu
-	sf::Sprite startButton;
 	sf::Texture startButtonTexture;
 	std::string startButtonTexturePath = "resources/textures/startbutton-Sheet.png";
 	if(!startButtonTexture.loadFromFile(startButtonTexturePath))
@@ -245,6 +247,7 @@ int main()
 		std::cerr << "failed to load \"" << startButtonTexturePath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	sf::Sprite startButton(startButtonTexture);
 	const sf::Vector2f startButtonScale(10, 10);
 	const int startButtonFrameWidth = 33;
 	const int startButtonFrameHeight = 13;
@@ -256,13 +259,12 @@ int main()
 	double startButtonFlashAnimationTickDeltaThreshold = 0.08;
 
 	startButton.setTexture(startButtonTexture);
-	startButton.setTextureRect(sf::IntRect(0, 0, startButtonFrameWidth, startButtonFrameHeight));
+	startButton.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(startButtonFrameWidth, startButtonFrameHeight)));
 	startButton.setScale(startButtonScale);
-	startButton.setOrigin(startButton.getLocalBounds().width / 2, startButton.getLocalBounds().height / 2);
-	startButton.setPosition(screenWidth / 2, (screenHeight / 5) * 2);
+	startButton.setOrigin(sf::Vector2f(startButton.getLocalBounds().size.x / 2, startButton.getLocalBounds().size.y / 2));
+	startButton.setPosition(sf::Vector2f(screenWidth / 2, (screenHeight / 5) * 2));
 
 	//viewHighscoresButton stuff
-	sf::Sprite viewHighscoresButton;
 	sf::Texture viewHighscoresButtonTexture;
 	std::string viewHighscoresButtonTexturePath = "resources/textures/viewhighscoresbutton-Sheet.png";
 	if(!viewHighscoresButtonTexture.loadFromFile(viewHighscoresButtonTexturePath))
@@ -270,6 +272,7 @@ int main()
 		std::cerr << "failed to load \"" << viewHighscoresButtonTexturePath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	sf::Sprite viewHighscoresButton(viewHighscoresButtonTexture);
 	const sf::Vector2f viewHighscoresButtonScale(10, 10);
 	const int viewHighscoresButtonFrameWidth = 93;
 	const int viewHighscoresButtonFrameHeight = 13;
@@ -285,29 +288,27 @@ int main()
 	const int viewHighscoresButtonPosition1y = screenHeight / 8;
 
 	viewHighscoresButton.setTexture(viewHighscoresButtonTexture);
-	viewHighscoresButton.setTextureRect(sf::IntRect(0, 0, viewHighscoresButtonFrameWidth, viewHighscoresButtonFrameHeight));
+	viewHighscoresButton.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(viewHighscoresButtonFrameWidth, viewHighscoresButtonFrameHeight)));
 	viewHighscoresButton.setScale(viewHighscoresButtonScale);
-	viewHighscoresButton.setOrigin(viewHighscoresButton.getLocalBounds().width / 2, viewHighscoresButton.getLocalBounds().height / 2);
-	viewHighscoresButton.setPosition(viewHighscoresButtonPosition0x, viewHighscoresButtonPosition0y);
+	viewHighscoresButton.setOrigin(sf::Vector2f(viewHighscoresButton.getLocalBounds().size.x / 2, viewHighscoresButton.getLocalBounds().size.y / 2));
+	viewHighscoresButton.setPosition(sf::Vector2f(viewHighscoresButtonPosition0x, viewHighscoresButtonPosition0y));
 
 	sf::RectangleShape viewHighscoresBackboardRect(sf::Vector2f(viewHighscoresButtonFrameWidth, viewHighscoresButtonFrameHeight * 7));
 	viewHighscoresBackboardRect.setFillColor(sf::Color::Black);
 	viewHighscoresBackboardRect.setScale(viewHighscoresButtonScale);
-	viewHighscoresBackboardRect.setOrigin(viewHighscoresBackboardRect.getLocalBounds().width / 2, viewHighscoresBackboardRect.getLocalBounds().height / 2);
-	viewHighscoresBackboardRect.setPosition(screenWidth / 2, viewHighscoresButtonPosition1y * 7);
+	viewHighscoresBackboardRect.setOrigin(sf::Vector2f(viewHighscoresBackboardRect.getLocalBounds().size.x / 2, viewHighscoresBackboardRect.getLocalBounds().size.y / 2));
+	viewHighscoresBackboardRect.setPosition(sf::Vector2f(screenWidth / 2, viewHighscoresButtonPosition1y * 7));
 
 	const int viewHighscoresTextLeftMarigin = 20;
 	const int viewHighscoresTextTopMarigin = 40;
-	sf::Text viewHighscoresText;
-	viewHighscoresText.setFont(masterFont);
+	sf::Text viewHighscoresText(masterFont);
 	viewHighscoresText.setCharacterSize(24);
-	viewHighscoresText.setPosition(
-			viewHighscoresBackboardRect.getGlobalBounds().left + viewHighscoresTextLeftMarigin,
-			viewHighscoresBackboardRect.getGlobalBounds().top + viewHighscoresTextTopMarigin
-			);
+	viewHighscoresText.setPosition(sf::Vector2f(
+			viewHighscoresBackboardRect.getGlobalBounds().position.x + viewHighscoresTextLeftMarigin,
+			viewHighscoresBackboardRect.getGlobalBounds().position.y + viewHighscoresTextTopMarigin
+			));
 
 	//death menu & high score screen
-	sf::Sprite playAgainButton;
 	sf::Texture playAgainButtonTexture;
 	std::string playAgainButtonTexturePath = "resources/textures/playagainbutton-Sheet.png";
 	if(!playAgainButtonTexture.loadFromFile(playAgainButtonTexturePath))
@@ -315,6 +316,7 @@ int main()
 		std::cerr << "failed to load \"" << playAgainButtonTexturePath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	sf::Sprite playAgainButton(playAgainButtonTexture);
 	const sf::Vector2f playAgainButtonScale(10, 10);
 	const int playAgainButtonFrameWidth = 68;
 	const int playAgainButtonFrameHeight = 13;
@@ -323,19 +325,17 @@ int main()
 	double playAgainButtonIdleAnimationTickDeltaThreshold = 0.6;
 
 	playAgainButton.setTexture(playAgainButtonTexture);
-	playAgainButton.setTextureRect(sf::IntRect(0, 0, playAgainButtonFrameWidth, playAgainButtonFrameHeight));
+	playAgainButton.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(playAgainButtonFrameWidth, playAgainButtonFrameHeight)));
 	playAgainButton.setScale(playAgainButtonScale);
-	playAgainButton.setOrigin(playAgainButton.getLocalBounds().width / 2, playAgainButton.getLocalBounds().height / 2);
-	playAgainButton.setPosition(screenWidth / 2, screenHeight / 2);
+	playAgainButton.setOrigin(sf::Vector2f(playAgainButton.getLocalBounds().size.x / 2, playAgainButton.getLocalBounds().size.y / 2));
+	playAgainButton.setPosition(sf::Vector2f(screenWidth / 2, screenHeight / 2));
 
 	//dimscreen rectangleshape object for death menu, pause menu, etc, etc
 	const int dimScreenShapeDefaultDim = 200;
 	sf::RectangleShape dimScreenShape(sf::Vector2f(screenWidth, screenHeight));
 	dimScreenShape.setFillColor(sf::Color(0, 0, 0, dimScreenShapeDefaultDim));
-	sf::Text dimScreenText;
-	dimScreenText.setFont(masterFont); //note to self as ofThursday, October 17, 2024, 14:14:38 --> make this default font...? change def
+	sf::Text dimScreenText(masterFont); //note to self as ofThursday, October 17, 2024, 14:14:38 --> make this default font...? change def
 	
-	sf::Sprite quitButton;
 	sf::Texture quitButtonTexture;
 	std::string quitButtonTexturePath = "resources/textures/quitbutton-Sheet.png";
 	if(!quitButtonTexture.loadFromFile(quitButtonTexturePath))
@@ -343,6 +343,7 @@ int main()
 		std::cerr << "failed to load \"" << quitButtonTexturePath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	sf::Sprite quitButton(quitButtonTexture);
 	const sf::Vector2f quitButtonScale(10, 10);
 	const int quitButtonFrameWidth = 29;
 	const int quitButtonFrameHeight = 13;
@@ -352,14 +353,13 @@ int main()
 	quitButton.setTexture(quitButtonTexture);
 	quitButton.setTextureRect(spriteSheetFrame(quitButtonFrameWidth, quitButtonFrameHeight, 0));
 	quitButton.setScale(quitButtonScale);
-	quitButton.setOrigin(quitButton.getLocalBounds().width / 2, quitButton.getLocalBounds().height / 2);
-	quitButton.setPosition(screenWidth / 2, (screenHeight / 4) * 3);
+	quitButton.setOrigin(sf::Vector2f(quitButton.getLocalBounds().size.x / 2, quitButton.getLocalBounds().size.y / 2));
+	quitButton.setPosition(sf::Vector2f(screenWidth / 2, (screenHeight / 4) * 3));
 
 	//load music and sound effects sfx
 	float masterVolume = 40;
 	std::vector<sf::Sound*> allSFXvector;
 
-	sf::Sound scoreSFX;
 	sf::SoundBuffer scoreSFXbuffer;
 	std::string scoreSFXbufferPath = "resources/sounds/score1.wav";
 	if(!scoreSFXbuffer.loadFromFile(scoreSFXbufferPath))
@@ -367,11 +367,10 @@ int main()
 		std::cerr << "failed to load \"" << scoreSFXbufferPath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	scoreSFX.setBuffer(scoreSFXbuffer);
+	sf::Sound scoreSFX(scoreSFXbuffer);
 	scoreSFX.setVolume(sfxVolume);
 	allSFXvector.push_back(&scoreSFX);
 
-	sf::Sound menu0SFX;
 	sf::SoundBuffer menu0SFXbuffer;
 	std::string menu0SFXbufferPath = "resources/sounds/menu3.wav";
 	if(!menu0SFXbuffer.loadFromFile(menu0SFXbufferPath))
@@ -379,11 +378,10 @@ int main()
 		std::cerr << "failed to load \"" << menu0SFXbufferPath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	menu0SFX.setBuffer(menu0SFXbuffer);
+	sf::Sound menu0SFX(menu0SFXbuffer);
 	menu0SFX.setVolume(sfxVolume);
 	allSFXvector.push_back(&menu0SFX);
 
-	sf::Sound menu1SFX;
 	sf::SoundBuffer menu1SFXbuffer;
 	std::string menu1SFXbufferPath = "resources/sounds/menu4.wav";
 	if(!menu1SFXbuffer.loadFromFile(menu1SFXbufferPath))
@@ -391,11 +389,11 @@ int main()
 		std::cerr << "failed to load \"" << menu1SFXbufferPath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	menu1SFX.setBuffer(menu1SFXbuffer);
+	
+	sf::Sound menu1SFX(menu1SFXbuffer);
 	menu1SFX.setVolume(sfxVolume);
 	allSFXvector.push_back(&menu1SFX);
 
-	sf::Sound jumpSFX;
 	sf::SoundBuffer jumpSFXbuffer;
 	std::string jumpSFXbufferPath = "resources/sounds/jump0.wav";
 	if(!jumpSFXbuffer.loadFromFile(jumpSFXbufferPath))
@@ -403,11 +401,10 @@ int main()
 		std::cerr << "failed to load \"" << jumpSFXbufferPath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	jumpSFX.setBuffer(jumpSFXbuffer);
+	sf::Sound jumpSFX(jumpSFXbuffer);
 	jumpSFX.setVolume(sfxVolume);
 	allSFXvector.push_back(&jumpSFX);
 
-	sf::Sound deadSFX;
 	sf::SoundBuffer deadSFXbuffer;
 	std::string deadSFXbufferPath = "resources/sounds/dead0.wav";
 	if(!deadSFXbuffer.loadFromFile(deadSFXbufferPath))
@@ -415,11 +412,10 @@ int main()
 		std::cerr << "failed to load \"" << deadSFXbufferPath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	deadSFX.setBuffer(deadSFXbuffer);
+	sf::Sound deadSFX(deadSFXbuffer);
 	deadSFX.setVolume(sfxVolume);
 	allSFXvector.push_back(&deadSFX);
 
-	sf::Sound missileDroppingSFX;
 	sf::SoundBuffer missileDroppingSFXbuffer;
 	std::string missileDroppingSFXbufferPath = "resources/sounds/missiledropping0.wav";
 	if(!missileDroppingSFXbuffer.loadFromFile(missileDroppingSFXbufferPath))
@@ -427,11 +423,10 @@ int main()
 		std::cerr << "failed to load \"" << missileDroppingSFXbufferPath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	missileDroppingSFX.setBuffer(missileDroppingSFXbuffer);
+	sf::Sound missileDroppingSFX(missileDroppingSFXbuffer);
 	missileDroppingSFX.setVolume(sfxVolume);
 	allSFXvector.push_back(&missileDroppingSFX);
 	
-	sf::Sound missileLaunchingSFX;
 	sf::SoundBuffer missileLaunchingSFXbuffer;
 	std::string missileLaunchingSFXbufferPath = "resources/sounds/missilelaunching0.wav";
 	if(!missileLaunchingSFXbuffer.loadFromFile(missileLaunchingSFXbufferPath))
@@ -439,7 +434,7 @@ int main()
 		std::cerr << "failed to load \"" << missileLaunchingSFXbufferPath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	missileLaunchingSFX.setBuffer(missileLaunchingSFXbuffer);
+	sf::Sound missileLaunchingSFX(missileLaunchingSFXbuffer);
 	missileLaunchingSFX.setVolume(sfxVolume);
 	allSFXvector.push_back(&missileLaunchingSFX);
 
@@ -450,9 +445,8 @@ int main()
 
 	//debug FPS font stuff
 	bool drawFPS = false;
-	sf::Text fps;
-	fps.setFont(masterFont);
-	fps.setPosition(10, 100);
+	sf::Text fps(masterFont);
+	fps.setPosition(sf::Vector2f(10, 100));
 	fps.setString("0");
 
 	//chrono delta time stuff
@@ -461,23 +455,22 @@ int main()
 	std::chrono::duration<double> deltaTime = lastframe - lastlastframe;
 
 	//view and window render stuff
-	sf::View view(sf::FloatRect(0, 0, screenWidth, screenHeight));
+	sf::View view(sf::FloatRect(sf::Vector2f(0, 0), sf::Vector2f(screenWidth, screenHeight)));
 
-	sf::RenderWindow window(sf::VideoMode(screenWidth, screenHeight), "title goes here", sf::Style::Default);
+	sf::RenderWindow window(sf::VideoMode(sf::Vector2u(screenWidth, screenHeight)), "title goes here", sf::Style::Default);
 	window.setView(view);
 	window.setKeyRepeatEnabled(false); //reread documentation for this one buddy Thursday, October 10, 2024, 10:34:00
 	window.setFramerateLimit(200);
 
 	while(window.isOpen())
 	{
-		sf::Event event;
-		while(window.pollEvent(event))
+		while(const std::optional event = window.pollEvent())
 		{
-			if(event.type == sf::Event::Closed)
+			if(event->is<sf::Event::Closed>())
 			{
 				window.close();
 			}
-			if(event.type == sf::Event::Resized)
+			if(event->is<sf::Event::Resized>())
 			{
 				//as of Saturday, October 12, 2024, 12:48:52,
 					//I have finally gotten the window resizing crap to work.
@@ -486,10 +479,16 @@ int main()
 
 				if((((float)window.getSize().x / 16) * 9) > window.getSize().y)
 				{
-					view.setViewport(sf::FloatRect(0.5 - (((((float)window.getSize().y / 9) * 16) / (float)window.getSize().x) / 2), 0, (((float)window.getSize().y / 9) * 16) / (float)window.getSize().x, 1));
+					view.setViewport(sf::FloatRect(
+						sf::Vector2f(0.5 - (((((float)window.getSize().y / 9) * 16) / (float)window.getSize().x) / 2), 0),
+						sf::Vector2f((((float)window.getSize().y / 9) * 16) / (float)window.getSize().x, 1)
+					));
 				} else
 				{
-					view.setViewport(sf::FloatRect(0, 0.5 - (((((float)window.getSize().x / 16) * 9) / (float)window.getSize().y) / 2), 1, (((float)window.getSize().x / 16) * 9) / (float)window.getSize().y));
+					view.setViewport(sf::FloatRect(
+						sf::Vector2f(0, 0.5 - (((((float)window.getSize().x / 16) * 9) / (float)window.getSize().y) / 2)),
+						sf::Vector2f(1, (((float)window.getSize().x / 16) * 9) / (float)window.getSize().y)
+					));
 				}
 				window.setView(view);
 			}
@@ -497,20 +496,22 @@ int main()
 			//thank you internet
 				//"https://stackoverflow.com/questions/54681508/how-can-i-add-a-sort-of-text-box-in-sfml-using-keyboard-input-and-sftext-to-di"
 				//"https://en.sfml-dev.org/forums/index.php?topic=19965.0"
-			if(event.type == sf::Event::TextEntered)
+			if(event->is<sf::Event::TextEntered>())
 			{
 				if(captureTextInputEvents)
 				{
 					//wtf ugly. fix later. Tuesday, November 26, 2024, 14:26:10
+					//as of Thursday, March 06, 2025, 22:41:17, event uglier with the update of SFML 3.x kill me
+					const sf::Event::TextEntered *textEntered = event->getIf<sf::Event::TextEntered>();
 					if(
-						event.text.unicode >= captureTextInputEventAsciiLowerBound &&
-						event.text.unicode <= captureTextInputEventAsciiUpperBound
+						textEntered->unicode >= captureTextInputEventAsciiLowerBound &&
+						textEntered->unicode <= captureTextInputEventAsciiUpperBound
 					)
 					{
-						capturedTextInput += static_cast<char>(event.text.unicode);
+						capturedTextInput += static_cast<char>(textEntered->unicode);
 					} else if(
-								(event.text.unicode == captureTextInputEventAsciiBackspace) ||
-								(event.text.unicode == captureTextInputEventAsciiDelete)
+								(textEntered->unicode == captureTextInputEventAsciiBackspace) ||
+								(textEntered->unicode == captureTextInputEventAsciiDelete)
 							)
 					{
 						if(capturedTextInput.size() > 0)
@@ -518,9 +519,9 @@ int main()
 							capturedTextInput.pop_back();
 						}
 					} else if(
-								(event.text.unicode == captureTextInputEventAsciiNewLineFeed) ||
-								(event.text.unicode == captureTextInputEventAsciiNewPageFormFeed) ||
-								(event.text.unicode == captureTextInputEventAsciiCarriageReturn)
+								(textEntered->unicode == captureTextInputEventAsciiNewLineFeed) ||
+								(textEntered->unicode == captureTextInputEventAsciiNewPageFormFeed) ||
+								(textEntered->unicode == captureTextInputEventAsciiCarriageReturn)
 							)
 					{
 						captureTextInputEvents = false;
@@ -541,7 +542,7 @@ int main()
 					capturedTextInput.pop_back();
 				}
 				captureTextInputEventBackspaceTickDelta = std::chrono::seconds::zero();
-			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::BackSpace))
+			} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Backspace))
 			{
 				captureTextInputEventBackspaceTickDelta += deltaTime;
 			} else
@@ -550,7 +551,7 @@ int main()
 			}
 		}
 
-		if(sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
+		if(sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Q))
 		{
 			window.close();
 		}
@@ -568,7 +569,7 @@ int main()
 				}
 				playerNameTextHoveredOver = true;
 
-				if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
+				if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
 				{
 					if(!playerNameTextClicked)
 					{
@@ -627,7 +628,7 @@ int main()
 				}
 				startButtonHoveredOver = true;
 
-				if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
+				if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
 				{
 					if(!startButtonClicked && !viewHighscoresButtonClicked && !playerNameTextClicked)
 					{
@@ -679,7 +680,7 @@ int main()
 				}
 				viewHighscoresButtonHoveredOver = true;
 
-				if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
+				if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
 				{
 					if(!viewHighscoresButtonClicked && !startButtonClicked && !playerNameTextClicked)
 					{
@@ -708,7 +709,7 @@ int main()
 					}
 					viewHighscoresText.setString(tempViewHighscoresBackboardText);
 
-					viewHighscoresButton.setPosition(viewHighscoresButtonPosition1x, viewHighscoresButtonPosition1y);
+					viewHighscoresButton.setPosition(sf::Vector2f(viewHighscoresButtonPosition1x, viewHighscoresButtonPosition1y));
 					viewHighscoresButtonFlashAnimationCount = 0;
 					viewHighscoresButtonClicked = false;
 					startMenu = false;
@@ -734,16 +735,16 @@ int main()
 			window.clear(sf::Color::Black);
 			
 			//update background
-			if(background.getPosition().x <= backgroundOriginalX - (background.getGlobalBounds().width / backgroundTextureMultiplier))
+			if(background.getPosition().x <= backgroundOriginalX - (background.getGlobalBounds().size.x / backgroundTextureMultiplier))
 			{
-				background.setPosition(backgroundOriginalX, backgroundOriginalY);
+				background.setPosition(sf::Vector2f(backgroundOriginalX, backgroundOriginalY));
 			}
-			background.move(-1 * backgroundSpeed * deltaTime.count(), 0);
+			background.move(sf::Vector2f(-1 * backgroundSpeed * deltaTime.count(), 0));
 			window.draw(background);
 
 			if(playerNameTextClicked)
 			{
-				playerNameTextCursor.setPosition(playerNameText.getGlobalBounds().width + playerNameTextCursorLeftMarigin, playerNameTextCursorTopMarigin);
+				playerNameTextCursor.setPosition(sf::Vector2f(playerNameText.getGlobalBounds().size.x + playerNameTextCursorLeftMarigin, playerNameTextCursorTopMarigin));
 				
 				if(playerNameTextCursorBlinkTickDelta.count() >= playerNameTextCursorBlinkTickDeltaThreshold)
 				{
@@ -780,11 +781,11 @@ int main()
 			window.clear(sf::Color::Black);
 			
 			//update background
-			if(background.getPosition().x <= backgroundOriginalX - (background.getGlobalBounds().width / backgroundTextureMultiplier))
+			if(background.getPosition().x <= backgroundOriginalX - (background.getGlobalBounds().size.x / backgroundTextureMultiplier))
 			{
-				background.setPosition(backgroundOriginalX, backgroundOriginalY);
+				background.setPosition(sf::Vector2f(backgroundOriginalX, backgroundOriginalY));
 			}
-			background.move(-1 * backgroundSpeed * deltaTime.count(), 0);
+			background.move(sf::Vector2f(-1 * backgroundSpeed * deltaTime.count(), 0));
 			window.draw(background);
 
 			//viewHighscoresButton logic
@@ -798,7 +799,7 @@ int main()
 				}
 				viewHighscoresButtonHoveredOver = true;
 
-				if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
+				if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
 				{
 					if(!viewHighscoresButtonClicked && !startButtonClicked)
 					{
@@ -819,7 +820,7 @@ int main()
 				{
 					viewHighscoresButtonFlashAnimationTickDelta = std::chrono::seconds::zero();
 
-					viewHighscoresButton.setPosition(viewHighscoresButtonPosition0x, viewHighscoresButtonPosition0y);
+					viewHighscoresButton.setPosition(sf::Vector2f(viewHighscoresButtonPosition0x, viewHighscoresButtonPosition0y));
 					viewHighscoresButtonFlashAnimationCount = 0;
 					viewHighscoresButtonClicked = false;
 					startMenu = true;
@@ -867,7 +868,7 @@ int main()
 				quitButton.setTextureRect(spriteSheetFrame(quitButtonFrameWidth, quitButtonFrameHeight, 0));
 			}
 
-			if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
+			if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
 			{
 				if(quitButtonHoveredOver)
 				{
@@ -933,8 +934,8 @@ int main()
 			
 			window.draw(dimScreenShape);
 			dimScreenText.setString("Left Mouse Button Anywhere To Resume");
-			dimScreenText.setOrigin(dimScreenText.getLocalBounds().width / 2, dimScreenText.getLocalBounds().height / 2);
-			dimScreenText.setPosition(screenWidth / 2, screenHeight / 2);
+			dimScreenText.setOrigin(sf::Vector2f(dimScreenText.getLocalBounds().size.x / 2, dimScreenText.getLocalBounds().size.y / 2));
+			dimScreenText.setPosition(sf::Vector2f(screenWidth / 2, screenHeight / 2));
 			dimScreenText.setCharacterSize(30);
 			window.draw(dimScreenText);
 			window.draw(quitButton);
@@ -949,11 +950,11 @@ int main()
 			window.clear(sf::Color::Black);
 			
 			//update background
-			if(background.getPosition().x <= backgroundOriginalX - (background.getGlobalBounds().width / backgroundTextureMultiplier))
+			if(background.getPosition().x <= backgroundOriginalX - (background.getGlobalBounds().size.x / backgroundTextureMultiplier))
 			{
-				background.setPosition(backgroundOriginalX, backgroundOriginalY);
+				background.setPosition(sf::Vector2f(backgroundOriginalX, backgroundOriginalY));
 			}
-			background.move(-1 * backgroundSpeed * deltaTime.count(), 0);
+			background.move(sf::Vector2f(-1 * backgroundSpeed * deltaTime.count(), 0));
 			window.draw(background);
 
 			//playAgainButton logic
@@ -967,7 +968,7 @@ int main()
 				}
 				playAgainButtonHoveredOver = true;
 
-				if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
+				if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
 				{
 					menu1SFX.play();
 					deathMenu = false;
@@ -1002,7 +1003,7 @@ int main()
 				}
 				quitButtonHoveredOver = true;
 				
-				if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
+				if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
 				{
 					quitButtonHoveredOver = false;
 					playerIsAlive = true;
@@ -1029,25 +1030,29 @@ int main()
 		} else if(playerIsAlive && !deathMenu)//the game (maybe this is a bad idea...?)
 		{
 			//pause menu...?
-			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Escape))
 			{
 				pauseMenu = true;
 			}
 
 			//player controls
-			if(!sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && playerJumpedLastTime)
+			if(!sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Space) && playerJumpedLastTime)
 			{
 				playerJumpedLastTime = false;
 			}
 
-			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && !playerJumpedLastTime && playerIsAlive)
+			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Space) && !playerJumpedLastTime && playerIsAlive)
 			{
 				playerInitialJump = true;
 				playerJumpedLastTime = true;
 				playerYvelocity = -1 * antiGravity;
 
 				jumpSFX.play();
-			} else if(!playerHitbox.getGlobalBounds().intersects(floor.getGlobalBounds()) && !playerHitbox.getGlobalBounds().intersects(ceiling.getGlobalBounds()) && playerInitialJump)
+			} else if(
+				!playerHitbox.getGlobalBounds().findIntersection(floor.getGlobalBounds()).has_value() &&
+				!playerHitbox.getGlobalBounds().findIntersection(ceiling.getGlobalBounds()).has_value() &&
+				playerInitialJump
+			)
 			{
 				//move player down due to gravity (falling)
 				playerYvelocity += gravity * deltaTime.count();
@@ -1057,11 +1062,14 @@ int main()
 				playerYvelocity = 0;
 
 				//ceiling?
-				if(playerHitbox.getGlobalBounds().intersects(ceiling.getGlobalBounds()))
+				if(playerHitbox.getGlobalBounds().findIntersection(ceiling.getGlobalBounds()).has_value())
 				{
 					//playerY = ceiling.getGlobalBounds().height + player.getGlobalBounds().top;
 					playerYvelocity = 100;
-				} else if(playerHitbox.getGlobalBounds().intersects(floor.getGlobalBounds()) || playerHitbox.getPosition().y >= floor.getPosition().y)
+				} else if(
+					playerHitbox.getGlobalBounds().findIntersection(floor.getGlobalBounds()).has_value() ||
+					playerHitbox.getPosition().y >= floor.getPosition().y
+				)
 				{
 					playerIsAlive = false;
 					deadSFX.play();
@@ -1071,19 +1079,19 @@ int main()
 
 			if(playerInitialJump)
 			{
-				if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+				if(sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::A))
 				{
 					playerXvelocity += -1 * playerXspeed * deltaTime.count();
-				} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right) || sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+				} else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Right) || sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::D))
 				{
 					playerXvelocity += playerXspeed * deltaTime.count();
 				}
 			}
 
-			if(playerHitbox.getGlobalBounds().intersects(leftWall.getGlobalBounds()))
+			if(playerHitbox.getGlobalBounds().findIntersection(leftWall.getGlobalBounds()).has_value())
 			{
 				playerXvelocity = 100;
-			} else if(playerHitbox.getGlobalBounds().intersects(rightWall.getGlobalBounds()))
+			} else if(playerHitbox.getGlobalBounds().findIntersection(rightWall.getGlobalBounds()).has_value())
 			{
 				playerXvelocity = -100;
 			}
@@ -1096,16 +1104,16 @@ int main()
 
 			playerAngle = playerYvelocity * -1 * playerAngleMultiplier;
 
-			playerHitbox.setPosition(playerX, playerY);
-			player.setPosition(playerX, playerY);
-			player.setRotation(playerAngle);
+			playerHitbox.setPosition(sf::Vector2f(playerX, playerY));
+			player.setPosition(sf::Vector2f(playerX, playerY));
+			player.setRotation(sf::Angle(sf::degrees(playerAngle)));
 
 			//update background
-			if(background.getPosition().x <= backgroundOriginalX - (background.getGlobalBounds().width / backgroundTextureMultiplier))
+			if(background.getPosition().x <= backgroundOriginalX - (background.getGlobalBounds().size.x / backgroundTextureMultiplier))
 			{
-				background.setPosition(backgroundOriginalX, backgroundOriginalY);
+				background.setPosition(sf::Vector2f(backgroundOriginalX, backgroundOriginalY));
 			}
-			background.move(-1 * backgroundSpeed * deltaTime.count(), 0);
+			background.move(sf::Vector2f(-1 * backgroundSpeed * deltaTime.count(), 0));
 
 			//draw and deltaTime
 			lastlastframe = std::chrono::high_resolution_clock::now();
@@ -1145,7 +1153,7 @@ int main()
 			if(pipes.size() <= 0 && pipesSubroutine)
 			{
 				pipesSubroutine = false;
-				spawnDefaultRandomPipe(pipes, &pipeTexture, screenWidth, screenHeight);
+				spawnDefaultRandomPipe(pipes, pipeTexture, screenWidth, screenHeight);
 			}
 			for(int x = 0; x < pipes.size(); x++)
 			{
@@ -1167,26 +1175,26 @@ int main()
 					scoreSFX.play();
 					if(RANDOM(0, 10) == 5 && !pipesSubroutine)
 					{
-						pipeTunnel(pipes, &pipeTexture, RANDOM(0, 20), screenWidth - 100, screenHeight / 2);
+						pipeTunnel(pipes, pipeTexture, RANDOM(0, 20), screenWidth - 100, screenHeight / 2);
 						pipesSubroutine = true;
 					} else if(RANDOM(0, 15) == 5 && !pipesSubroutine)
 					{
-						pipeShrinkTunnel(pipes, &pipeTexture, RANDOM(0, 20), screenWidth - 100, screenHeight / 2);
+						pipeShrinkTunnel(pipes, pipeTexture, RANDOM(0, 20), screenWidth - 100, screenHeight / 2);
 						pipesSubroutine = true;
 					} else if(RANDOM(0, 1) && !pipesSubroutine)
 					{
-						missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3.5, playerY + RANDOM(-100, 100), defaultMissileSpeed, &missileDroppingSFX, &missileLaunchingSFX));
+						missiles.emplace_back(Missile(missileTexture, (screenWidth / 4) * 3.5, playerY + RANDOM(-100, 100), defaultMissileSpeed, &missileDroppingSFX, &missileLaunchingSFX));
 						missileDroppingSFX.play();
-						missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3.5, playerY + RANDOM(-100, 100), defaultMissileSpeed, &missileDroppingSFX, &missileLaunchingSFX));
+						missiles.emplace_back(Missile(missileTexture, (screenWidth / 4) * 3.5, playerY + RANDOM(-100, 100), defaultMissileSpeed, &missileDroppingSFX, &missileLaunchingSFX));
 						missileDroppingSFX.play();
-						missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3.5, playerY + RANDOM(-100, 100), defaultMissileSpeed, &missileDroppingSFX, &missileLaunchingSFX));
+						missiles.emplace_back(Missile(missileTexture, (screenWidth / 4) * 3.5, playerY + RANDOM(-100, 100), defaultMissileSpeed, &missileDroppingSFX, &missileLaunchingSFX));
 						missileDroppingSFX.play();
-						missiles.emplace_back(Missile(&missileTexture, (screenWidth / 4) * 3.5, playerY + RANDOM(-100, 100), defaultMissileSpeed, &missileDroppingSFX, &missileLaunchingSFX));
+						missiles.emplace_back(Missile(missileTexture, (screenWidth / 4) * 3.5, playerY + RANDOM(-100, 100), defaultMissileSpeed, &missileDroppingSFX, &missileLaunchingSFX));
 						missileDroppingSFX.play();
 						pipesSubroutine = true;
 					} else if(!pipesSubroutine)
 					{
-						spawnDefaultRandomPipe(pipes, &pipeTexture, screenWidth, screenHeight);
+						spawnDefaultRandomPipe(pipes, pipeTexture, screenWidth, screenHeight);
 					}
 				}
 
@@ -1210,7 +1218,7 @@ int main()
 			//update missiles stuff
 			for(int x = 0; x < missiles.size(); x++)
 			{
-				if(missiles[x].getMissile().getGlobalBounds().intersects(playerHitbox.getGlobalBounds()))
+				if(missiles[x].getMissile().getGlobalBounds().findIntersection(playerHitbox.getGlobalBounds()).has_value())
 				{
 					playerIsAlive = false;
 					deadSFX.play();
@@ -1254,20 +1262,20 @@ int main()
 
 			playerAngle = playerYvelocity * -1 * playerAngleMultiplier;
 
-			playerHitbox.setPosition(playerX, playerY);
-			player.setPosition(playerX, playerY);
-			player.setRotation(playerAngle);
+			playerHitbox.setPosition(sf::Vector2f(playerX, playerY));
+			player.setPosition(sf::Vector2f(playerX, playerY));
+			player.setRotation(sf::Angle(sf::degrees(playerAngle)));
 
 			//draw and deltaTime
 			lastlastframe = std::chrono::high_resolution_clock::now();
 			window.clear(sf::Color::Black);
 		
 			//update background
-			if(background.getPosition().x <= backgroundOriginalX - (background.getGlobalBounds().width / backgroundTextureMultiplier))
+			if(background.getPosition().x <= backgroundOriginalX - (background.getGlobalBounds().size.x / backgroundTextureMultiplier))
 			{
-				background.setPosition(backgroundOriginalX, backgroundOriginalY);
+				background.setPosition(sf::Vector2f(backgroundOriginalX, backgroundOriginalY));
 			}
-			background.move(-1 * backgroundSpeed * deltaTime.count(), 0);
+			background.move(sf::Vector2f(-1 * backgroundSpeed * deltaTime.count(), 0));
 			window.draw(background);
 
 			for(int x = 0; x < pipes.size(); x++)
@@ -1313,9 +1321,9 @@ int main()
 				playerJumpedLastTime = false;
 
 				currentScoreText.setString("0");
-				playerHitbox.setPosition(playerX, playerY);
-				player.setPosition(playerX, playerY);
-				player.setRotation(playerAngle);
+				playerHitbox.setPosition(sf::Vector2f(playerX, playerY));
+				player.setPosition(sf::Vector2f(playerX, playerY));
+				player.setRotation(sf::Angle(sf::degrees(playerAngle)));
 
 				if(playDeathAnimationBeforeQuitToStartMenu)
 				{
@@ -1325,7 +1333,7 @@ int main()
 				{
 					deathMenu = true;
 				}
-				spawnDefaultRandomPipe(pipes, &pipeTexture, screenWidth, screenHeight);
+				spawnDefaultRandomPipe(pipes, pipeTexture, screenWidth, screenHeight);
 			}
 		}
 	}
