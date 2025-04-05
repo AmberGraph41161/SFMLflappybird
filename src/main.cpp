@@ -58,7 +58,7 @@ int main()
 		exit(EXIT_FAILURE);
 	}
 	sf::Sprite player(playerTexture);
-	
+
 	const sf::Vector2f playerScale(4, 4);
 	player.setOrigin(sf::Vector2f(player.getLocalBounds().size.x / 2, player.getLocalBounds().size.y / 2));
 	player.setScale(playerScale);
@@ -84,7 +84,7 @@ int main()
 	bool pauseMenu = false;
 	bool deathMenu = false;
 	bool settingsMenu = false;
-	
+
 	int playerCurrentScore = 0; //(current score, during live gameplay and not saved score(s))
 
 	//make sure "dat/" exists. if not, create it
@@ -155,7 +155,7 @@ int main()
 	playerJumpIndicator.setOrigin(sf::Vector2f(playerJumpIndicator.getLocalBounds().size.x / 2, playerJumpIndicator.getLocalBounds().size.y / 2));
 	playerJumpIndicator.setScale(playerScale);
 	playerJumpIndicator.setPosition(sf::Vector2f(playerX, playerY + playerJumpIndicatorYoffsetFix));
-	
+
 	std::chrono::duration<double> animatePlayerJumpIndicatorDuration = std::chrono::seconds::zero();
 	double animatePlayerJumpIndicatorDurationThreshold = 0.4;
 
@@ -229,7 +229,7 @@ int main()
 	sf::RectangleShape rightWall(sf::Vector2f(rightWallThickness, screenHeight));
 	rightWall.setPosition(sf::Vector2f(screenWidth - rightWallThickness, 0));
 	rightWall.setFillColor(sf::Color::Cyan);
-	
+
 	//score
 	const sf::Vector2f scoreTextScale(1, 1);
 	sf::Text currentScoreText(masterFont);
@@ -238,7 +238,7 @@ int main()
 	currentScoreText.setString(std::to_string(playerCurrentScore));
 	currentScoreText.setOrigin(sf::Vector2f(currentScoreText.getLocalBounds().size.x / 2, currentScoreText.getLocalBounds().size.y / 2));
 	currentScoreText.setPosition(sf::Vector2f(screenWidth / 2, screenHeight / 10));
-	
+
 	//start menu
 	sf::Texture startButtonTexture;
 	std::string startButtonTexturePath = "resources/textures/startbutton-Sheet.png";
@@ -335,7 +335,7 @@ int main()
 	sf::RectangleShape dimScreenShape(sf::Vector2f(screenWidth, screenHeight));
 	dimScreenShape.setFillColor(sf::Color(0, 0, 0, dimScreenShapeDefaultDim));
 	sf::Text dimScreenText(masterFont); //note to self as ofThursday, October 17, 2024, 14:14:38 --> make this default font...? change def
-	
+
 	sf::Texture quitButtonTexture;
 	std::string quitButtonTexturePath = "resources/textures/quitbutton-Sheet.png";
 	if(!quitButtonTexture.loadFromFile(quitButtonTexturePath))
@@ -389,7 +389,7 @@ int main()
 		std::cerr << "failed to load \"" << menu1SFXbufferPath << "\"" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	
+
 	sf::Sound menu1SFX(menu1SFXbuffer);
 	menu1SFX.setVolume(sfxVolume);
 	allSFXvector.push_back(&menu1SFX);
@@ -426,7 +426,7 @@ int main()
 	sf::Sound missileDroppingSFX(missileDroppingSFXbuffer);
 	missileDroppingSFX.setVolume(sfxVolume);
 	allSFXvector.push_back(&missileDroppingSFX);
-	
+
 	sf::SoundBuffer missileLaunchingSFXbuffer;
 	std::string missileLaunchingSFXbufferPath = "resources/sounds/missilelaunching0.wav";
 	if(!missileLaunchingSFXbuffer.loadFromFile(missileLaunchingSFXbufferPath))
@@ -492,7 +492,7 @@ int main()
 				}
 				window.setView(view);
 			}
-			
+
 			//thank you internet
 				//"https://stackoverflow.com/questions/54681508/how-can-i-add-a-sort-of-text-box-in-sfml-using-keyboard-input-and-sftext-to-di"
 				//"https://en.sfml-dev.org/forums/index.php?topic=19965.0"
@@ -729,11 +729,11 @@ int main()
 					viewHighscoresButton.setTextureRect(spriteSheetFrame(viewHighscoresButtonFrameWidth, viewHighscoresButtonFrameHeight, 2 + (viewHighscoresButtonFlashAnimationCount % 2)));
 				}
 			}
-			
+
 			//draw and deltaTime
 			lastlastframe = std::chrono::high_resolution_clock::now();
 			window.clear(sf::Color::Black);
-			
+
 			//update background
 			if(background.getPosition().x <= backgroundOriginalX - (background.getGlobalBounds().size.x / backgroundTextureMultiplier))
 			{
@@ -745,7 +745,7 @@ int main()
 			if(playerNameTextClicked)
 			{
 				playerNameTextCursor.setPosition(sf::Vector2f(playerNameText.getGlobalBounds().size.x + playerNameTextCursorLeftMarigin, playerNameTextCursorTopMarigin));
-				
+
 				if(playerNameTextCursorBlinkTickDelta.count() >= playerNameTextCursorBlinkTickDeltaThreshold)
 				{
 					playerNameTextCursorBlinkTickDelta = std::chrono::seconds::zero();
@@ -779,7 +779,7 @@ int main()
 			//draw and deltaTime
 			lastlastframe = std::chrono::high_resolution_clock::now();
 			window.clear(sf::Color::Black);
-			
+
 			//update background
 			if(background.getPosition().x <= backgroundOriginalX - (background.getGlobalBounds().size.x / backgroundTextureMultiplier))
 			{
@@ -885,20 +885,20 @@ int main()
 			//draw and deltaTime
 			lastlastframe = std::chrono::high_resolution_clock::now();
 			window.clear(sf::Color::Black);
-		
+
 			window.draw(background);
-			
+
 			window.draw(player);
 			if(!playerInitialJump)
 			{
 				window.draw(playerJumpIndicator);
 			}
-			
+
 			for(int x = 0; x < pipes.size(); x++)
 			{
 				window.draw(pipes[x].getTopPipe());
 				window.draw(pipes[x].getBottomPipe());
-				
+
 				if(displayHitboxes)
 				{
 					window.draw(pipes[x].getTopPipeHitbox());
@@ -931,7 +931,7 @@ int main()
 			{
 				window.draw(fps);
 			}
-			
+
 			window.draw(dimScreenShape);
 			dimScreenText.setString("Left Mouse Button Anywhere To Resume");
 			dimScreenText.setOrigin(sf::Vector2f(dimScreenText.getLocalBounds().size.x / 2, dimScreenText.getLocalBounds().size.y / 2));
@@ -948,7 +948,7 @@ int main()
 		{
 			lastlastframe = std::chrono::high_resolution_clock::now();
 			window.clear(sf::Color::Black);
-			
+
 			//update background
 			if(background.getPosition().x <= backgroundOriginalX - (background.getGlobalBounds().size.x / backgroundTextureMultiplier))
 			{
@@ -1002,7 +1002,7 @@ int main()
 					menu0SFX.play();
 				}
 				quitButtonHoveredOver = true;
-				
+
 				if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
 				{
 					quitButtonHoveredOver = false;
@@ -1021,7 +1021,7 @@ int main()
 
 			window.draw(playAgainButton);
 			window.draw(quitButton);
-			
+
 			window.draw(playerNameText);
 
 			window.display();
@@ -1099,7 +1099,7 @@ int main()
 			//update player
 			playerY += playerYvelocity * deltaTime.count();
 			playerX += playerXvelocity * deltaTime.count();
-			
+
 			playerXvelocity *= playerXfriction * deltaTime.count();
 
 			playerAngle = playerYvelocity * -1 * playerAngleMultiplier;
@@ -1118,9 +1118,9 @@ int main()
 			//draw and deltaTime
 			lastlastframe = std::chrono::high_resolution_clock::now();
 			window.clear(sf::Color::Black);
-		
+
 			window.draw(background);
-			
+
 			window.draw(player);
 			if(!playerInitialJump)
 			{
@@ -1139,7 +1139,7 @@ int main()
 				}
 				window.draw(playerJumpIndicator);
 			}
-			
+
 			if(displayHitboxes)
 			{
 				window.draw(ceiling);
@@ -1247,7 +1247,7 @@ int main()
 			{
 				window.draw(fps);
 			}
-			
+
 			window.display();
 			lastframe = std::chrono::high_resolution_clock::now();
 			deltaTime = lastframe - lastlastframe;
@@ -1269,7 +1269,7 @@ int main()
 			//draw and deltaTime
 			lastlastframe = std::chrono::high_resolution_clock::now();
 			window.clear(sf::Color::Black);
-		
+
 			//update background
 			if(background.getPosition().x <= backgroundOriginalX - (background.getGlobalBounds().size.x / backgroundTextureMultiplier))
 			{
@@ -1296,7 +1296,7 @@ int main()
 			{
 				window.draw(fps);
 			}
-			
+
 			window.display();
 			lastframe = std::chrono::high_resolution_clock::now();
 			deltaTime = lastframe - lastlastframe;
