@@ -1,10 +1,7 @@
 main
 obj/
 dat/
-
-src/old/
-resources/old/
-resources/lol/
+old/
 
 build/
 
