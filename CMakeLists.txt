@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
 # get SFML if not have n stuff
-find_package(SFML 3 QUIET REQUIRED COMPONENTS Graphics Audio)
+find_package(SFML 3 QUIET COMPONENTS Graphics Audio)
 if(NOT SFML_FOUND)
 	messsage(WARNING "SFML3 local installation not found")
 	messsage("downloading SFML3 from github")
