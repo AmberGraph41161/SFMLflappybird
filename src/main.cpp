@@ -3,7 +3,6 @@
 	//https://www.sfml-dev.org/tutorials/3.0/getting-started/migrate/#fixed-width-integers
 //finally finished SFML 2.x to SFML 3.x migration as of Thursday, March 06, 2025, 23:10:28
 
-#include <SFML/System/Angle.hpp>
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
@@ -11,17 +10,8 @@
 #include <vector>
 #include <filesystem>
 
-#include <SFML/Window/Keyboard.hpp>
-#include <SFML/Window/VideoMode.hpp>
-#include <SFML/System/Vector2.hpp>
-#include <SFML/Graphics/CircleShape.hpp>
-#include <SFML/Graphics/Rect.hpp>
-#include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Graphics.hpp>
-#include <SFML/Graphics/RenderWindow.hpp>
-#include <SFML/Graphics/Color.hpp>
 #include <SFML/Audio.hpp>
-#include <SFML/Audio/Sound.hpp>
 
 #include "gamefunctions.hpp"
 #include "pipe.hpp"
