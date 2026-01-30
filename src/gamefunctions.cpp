@@ -3,31 +3,22 @@
 #include <iostream>
 #include <map>
 #include <fstream>
-#include <chrono>
+#include <random>
 
 int RANDOM(int minimum, int maximum)
 {
-	return (rand() % (maximum - minimum + 1)) + minimum;
+	std::random_device randomDevice;
+	std::mt19937 mt(randomDevice());
+	std::uniform_int_distribution<int> dist(minimum, maximum);
+	return dist(mt);
 }
 
 double RANDOMDOUBLE(double minimum, double maximum)
 {
-	return (((double)rand() / RAND_MAX) * (maximum - minimum)) + minimum;
-}
-
-void SLEEP(double seconds)
-{
-	std::chrono::time_point<std::chrono::system_clock> START, END;
-	START = std::chrono::high_resolution_clock::now();
-	while(true)
-	{
-		END = std::chrono::high_resolution_clock::now();
-		std::chrono::duration<double> duration = END - START;
-		if(duration.count() >= seconds)
-		{
-			break;
-		}
-	}
+	std::random_device randomDevice;
+	std::mt19937 mt(randomDevice());
+	std::uniform_real_distribution<double> dist(minimum, maximum);
+	return dist(mt);
 }
 
 sf::IntRect spriteSheetFrame(int spriteFrameWidth, int spriteFrameHeight, int frameNumber) //this is only for sprite sheet left to right horiztonal etc etc
