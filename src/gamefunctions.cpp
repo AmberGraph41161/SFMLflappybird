@@ -30,37 +30,38 @@ sf::IntRect spriteSheetFrame(int spriteFrameWidth, int spriteFrameHeight, int fr
 //playerName.txt file format:
 	//playernamegoes here with spacesorwithnospacesatall or anythinglikethat
 
-void savePlayerName(std::string playerName)
+void savePlayerName(const std::filesystem::path savedPlayerNamePath, std::string playerName)
 {
 	std::fstream write;
-	write.open("dat/playerName.txt", std::fstream::out | std::fstream::trunc);
+	write.open(savedPlayerNamePath, std::fstream::out | std::fstream::trunc);
 	if(write.fail())
 	{
-		std::cerr << "failed to open \"dat/playerName.txt\"" << std::endl;
+		std::cerr << "failed to open " << savedPlayerNamePath << std::endl;
 		write.close();
 		return;
 	}
 
-	std::cout << "saving playerName..." << std::endl;
+	std::cout << "saving playerName to " << savedPlayerNamePath << "..." << std::endl;
 	write << playerName;
 	write.close();
 	std::cout << "done saving playerName [" << playerName << "] !" << std::endl;
 }
-std::string getSavedPlayerName()
+
+std::string getSavedPlayerName(const std::filesystem::path savedPlayerNamePath)
 {
 	std::fstream read;
-	read.open("dat/playerName.txt", std::fstream::in);
+	read.open(savedPlayerNamePath, std::fstream::in);
 	if(read.fail())
 	{
-		std::cerr << "failed to open \"dat/playerName.txt\"" << std::endl;
+		std::cerr << "failed to open " << savedPlayerNamePath << std::endl;
 		read.close();
 
-		std::cerr << "creating default \"dat/playerName.txt\" file..." << std::endl;
+		std::cerr << "creating default " << savedPlayerNamePath << " file..." << std::endl;
 		std::fstream write;
-		write.open("dat/playerName.txt", std::fstream::out | std::fstream::trunc);
+		write.open(savedPlayerNamePath, std::fstream::out | std::fstream::trunc);
 		if(write.fail())
 		{
-			std::cerr << "failed to create \"dat/playerName.txt\"" << std::endl;
+			std::cerr << "failed to create " << savedPlayerNamePath << std::endl;
 			write.close();
 			return "player0";
 		}
@@ -86,13 +87,13 @@ std::string getSavedPlayerName()
 	//playerName2\tplayerScore2
 //the scores are are mapped by std::string playername as the key value, so there are only unqiue players
 
-void saveScores(std::map<std::string, int> &playerScores)
+void saveScores(const std::filesystem::path savedScoresPath, std::map<std::string, int> &playerScores)
 {
 	std::fstream write;
-	write.open("dat/scores.txt", std::fstream::out | std::fstream::trunc);
+	write.open(savedScoresPath, std::fstream::out | std::fstream::trunc);
 	if(write.fail())
 	{
-		std::cerr << "failed to open \"dat/scores.txt\"" << std::endl;
+		std::cerr << "failed to open " << savedScoresPath << std::endl;
 		write.close();
 
 		return;
@@ -107,13 +108,14 @@ void saveScores(std::map<std::string, int> &playerScores)
 	write.close();
 	std::cout << "done saving scores!" << std::endl;
 }
-void getSavedScores(std::map<std::string, int> &playerScores)
+
+void getSavedScores(const std::filesystem::path savedScoresPath, std::map<std::string, int> &playerScores)
 {
 	std::fstream read;
-	read.open("dat/scores.txt", std::fstream::in);
+	read.open(savedScoresPath, std::fstream::in);
 	if(read.fail())
 	{
-		std::cerr << "failed to open \"dat/scores.txt\"" << std::endl;
+		std::cerr << "failed to open " << savedScoresPath << std::endl;
 		read.close();
 		return;
 	}

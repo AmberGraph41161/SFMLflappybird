@@ -77,14 +77,16 @@ int main()
 
 	int playerCurrentScore = 0; //(current score, during live gameplay and not saved score(s))
 
-	//make sure "dat/" exists. if not, create it
-	if(!std::filesystem::exists("dat"))
+	const std::filesystem::path datFolder("resources/dat");
+	const std::filesystem::path savedScoresPath(datFolder / "scores.txt");
+	const std::filesystem::path savedPlayerNamePath(datFolder / "playerName.txt");
+	if(!std::filesystem::exists(datFolder))
 	{
-		std::filesystem::create_directory("dat");
+		std::filesystem::create_directory(datFolder);
 	}
 	std::map<std::string, int> playerScores;
-	getSavedScores(playerScores);
-	std::string playerName = getSavedPlayerName();
+	getSavedScores(savedScoresPath, playerScores);
+	std::string playerName = getSavedPlayerName(savedPlayerNamePath);
 	int playerNameCharacterLengthThreshold = 30;
 
 	//displaying playerName
@@ -599,7 +601,7 @@ int main()
 					playerName = "player0";
 					playerNameText.setString(playerName);
 				}
-				savePlayerName(playerName);
+				savePlayerName(savedPlayerNamePath, playerName);
 				playerNameTextSavedToFile = true;
 				playerNameTextClicked = false;
 
@@ -692,7 +694,7 @@ int main()
 					viewHighscoresButtonFlashAnimationTickDelta = std::chrono::seconds::zero();
 
 					std::string tempViewHighscoresBackboardText = "";
-					getSavedScores(playerScores);
+					getSavedScores(savedScoresPath, playerScores);
 					for(std::map<std::string, int>::iterator it = playerScores.begin(); it != playerScores.end(); ++it)
 					{
 						tempViewHighscoresBackboardText += it->first + " ---> " + std::to_string(it->second) + "\n";
@@ -1296,7 +1298,7 @@ int main()
 				if(playerScores[playerName] < playerCurrentScore)
 				{
 					playerScores[playerName] = playerCurrentScore;
-					saveScores(playerScores);
+					saveScores(savedScoresPath, playerScores);
 				}
 
 				pipes.clear();
@@ -1327,7 +1329,7 @@ int main()
 			}
 		}
 	}
-	saveScores(playerScores);
+	saveScores(savedScoresPath, playerScores);
 
 	std::cout << "[done!]" << std::endl;
 	return 0;

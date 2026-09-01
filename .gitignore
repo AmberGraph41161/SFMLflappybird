@@ -1,11 +1,8 @@
-main
-obj/
-dat/
-old/
+/notes.txt
+/md/forlater
 
-build/
+/main
+/build/
 
-pandoc/
-md/forlater
-README.html
-notes.txt
+/old/
+/resources/dat/
